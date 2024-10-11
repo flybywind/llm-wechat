@@ -1,1 +1,2 @@
-from .model_spec import QianFanModel
+from . import model_spec
+from .llm import QianfanLLM
