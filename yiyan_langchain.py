@@ -25,7 +25,7 @@ def testRawModel():
 
 def testLLM():
     from myqianfan.llm import QianfanLLM
-    llm = QianfanLLM(model_spec=model_spec.Tiny8K, temperature=0.3)
+    llm = QianfanLLM(model_spec=model_spec.Tiny8K, temperature=0.3)#, max_content_len=20)
     # stream = llm._stream("你好, 世界上最大的动物是什么？")
     # for token in stream:
     #     print(token)

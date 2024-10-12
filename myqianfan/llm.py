@@ -23,7 +23,7 @@ class QianfanLLM(LLM):
     max_output_tokens: int = 1024
     history_len: int = 10
     max_content_len: int = 20000
-    max_token_len: int = 1024
+    # max_token_len: int = 1024
     _model: qianfan.ChatCompletion
     _conversation_history: List[dict]
     _conversation_str_len: List[int]
@@ -47,7 +47,7 @@ class QianfanLLM(LLM):
         self._conversation_str_len.append(len(prompt))
         self._current_str_len += self._conversation_str_len[-1]
         # truncate by max_content_len and max_token_len
-        max_str_len = self.model_spec.max_str_len
+        max_str_len = min(self.max_content_len, self.model_spec.max_str_len)
         # max_token_len = self.model_spec.max_token_len
 
         start_i = max(0, len(self._conversation_history) - self.history_len)
@@ -61,12 +61,13 @@ class QianfanLLM(LLM):
                 break
             self._current_str_len -= sn
             # self.current_token_len -= tn
-            start_i = i
+            start_i = i+1
         if self._conversation_history[start_i]['role'] == Role.A:
             self._conversation_str_len -= self._conversation_str_len[start_i]
             # self.conversation_token_len -= self.conversation_token_len[start_i]
             start_i += 1
         self._conversation_history = self._conversation_history[start_i:] 
+        assert len(self._conversation_history) > 0 and self._conversation_history[-1]['role'] == Role.U
         # Call the model to get the response
         resp = self._model.do(model=self.model_spec.name, 
                                 messages=self._conversation_history,
