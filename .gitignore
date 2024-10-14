@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 *.keys
+*/vectorstore/**
 __pycache__/
 *.py[cod]
 *$py.class
