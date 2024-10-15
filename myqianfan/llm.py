@@ -27,10 +27,12 @@ class QianfanLLM(LLM):
     _model: qianfan.ChatCompletion
     _conversation_history: List[dict]
     _conversation_str_len: List[int]
+    _user_question_history: List[str]
     _current_str_len: int
 
     def model_post_init(self, ctx):
         self._model = qianfan.ChatCompletion()
+        self._user_question_history = []
         self._conversation_history = []  # List to maintain chat history
         self._conversation_str_len = []
         self._current_str_len = 0
@@ -63,7 +65,7 @@ class QianfanLLM(LLM):
             # self.current_token_len -= tn
             start_i = i+1
         if self._conversation_history[start_i]['role'] == Role.A:
-            self._conversation_str_len -= self._conversation_str_len[start_i]
+            self._current_str_len -= self._conversation_str_len[start_i]
             # self.conversation_token_len -= self.conversation_token_len[start_i]
             start_i += 1
         self._conversation_history = self._conversation_history[start_i:] 
@@ -114,9 +116,19 @@ class QianfanLLM(LLM):
     def conversation_history(self):
         return self._conversation_history
     
+    @property
+    def user_question_history(self):
+        return self._user_question_history
+    
+    def add_user_question(self, str):
+        self._user_question_history.append(str)
+    
     def clear_history(self):
         """Clear the conversation history when starting a new conversation."""
         self._conversation_history = []
+        self._conversation_str_len = []
+        self._user_question_history = []
+        self._current_str_len = 0
     
 class MyCustomLLM(LLM):
     some_param: str
