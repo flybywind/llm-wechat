@@ -3,6 +3,8 @@
 //  ClipboardMonitor
 //
 //  Created by flybywind wen on 2024/10/16.
+// 注意，如果要获取keyboard事件，需要在 隐私与安全 --> 辅助功能 那边把这个app加进去
+// ~/Library/Developer/Xcode/DerivedData/YourAppName-[random]/Build/Products/Debug/YourAppName.app
 //
 
 import Cocoa
@@ -18,6 +20,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let pythonOutput: Pipe
 
     let logger = Logger(subsystem: "wtx.ClipboardMonitor", category: "AppDelegate")
+    let manager = PythonProcessManager(scriptPath: "/Users/flybywindwen/Projects/llm-wechat/echo.py")
 
     override init() {
         lastClipboardContent = ""
@@ -26,36 +29,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         pythonOutput = Pipe()
         
         super.init()
-        
-        // Set up Python process
-        pythonProcess.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
-        pythonProcess.arguments = ["/Users/flybywindwen/Projects/llm-wechat/echo.py"]
-        pythonProcess.standardInput = pythonInput.fileHandleForWriting
-        pythonProcess.standardOutput = pythonOutput.fileHandleForReading
-        
         do {
-            try pythonProcess.run()
+            try manager.start()
         } catch {
-            logger.error("Failed to start Python process: \(error)")
+            logger.error("start python manager failed \(error)")
         }
-        // Set up asynchronous reading from Python output
-        pythonOutput.fileHandleForReading.readabilityHandler = { fileHandle in
-            do {
-                let data = try fileHandle.readToEnd()!
-                if let output = String(data: data, encoding: .utf8), !output.isEmpty {
-                    self.logger.info("Python output: \(output)")
-                    // Here you can process the output as needed
-                }
-            } catch {
-                self.logger.error("failed to read output of python: \(error)")
-            }
-        
-        }
+
+        manager.send("Hello, World!")
     }
     deinit {
-        // Clean up
-        pythonOutput.fileHandleForReading.readabilityHandler = nil
-        pythonProcess.terminate()
+        // When you're done
+        manager.stop()
     }
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -64,15 +48,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.image = NSImage(named: NSImage.Name("StatusBarButtonImage"))
         }
         
-        // Start monitoring clipboard
-//        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-//            self.checkClipboard()
-//        }
         startKeyboardMonitoring()
     }
     
     func startKeyboardMonitoring() {
-        keyboardMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyUp]) { (event) in
+        keyboardMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyUp) { (event) in
             self.handleKeyEvent(event)
         }
         logger.info("Keyboard monitoring started")
@@ -85,6 +65,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if let char = charOpt, char.elementsEqual("c") {
                 // 2 is the key code for 'C'
                 logger.debug("'ctrl-c' key was pressed")
+                checkClipboard()
                 // You can add your custom logic here
             }
         }
@@ -92,16 +73,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func checkClipboard() {
         if let content = pasteboard.string(forType: .string) {
             if !content.isEmpty && !content.elementsEqual(lastClipboardContent) {
-                sendToPython(content:content)
+                logger.debug("send data: \(content)")
+                manager.send(content)
+                lastClipboardContent = content
             }
-        }
-    }
-
-    func sendToPython(content: String) {
-        logger.debug("send data: \(content)")
-        
-        if let data = content.data(using: .utf8) {
-            pythonInput.fileHandleForWriting.write(data)
         }
     }
 }
