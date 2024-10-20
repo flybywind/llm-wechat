@@ -11,7 +11,7 @@ import threading
 from typing import Union
 from queue import Queue, Empty as QueueEmptyException
 
-import config
+from myconf import config
 
 CTRL_KEY = keyboard.Key.cmd if platform.system() == "Darwin" else keyboard.Key.ctrl
 KeyEvent = namedtuple("KeyEvent", ["key", "time"])
