@@ -1,4 +1,5 @@
 from collections import namedtuple
+from concurrent.futures import ThreadPoolExecutor
 import sys
 from loguru import logger
 import platform
@@ -7,43 +8,44 @@ from pynput import keyboard, mouse
 import pyautogui
 import time
 import threading
-from pydantic import BaseModel, Field
-from queue import Queue
+from typing import Union
+from queue import Queue, Empty as QueueEmptyException
 
-# 创建一个队列来存储处理后的文本
-text_queue = Queue()
-keystroke_queue = Queue()
+import config
+
 CTRL_KEY = keyboard.Key.cmd if platform.system() == "Darwin" else keyboard.Key.ctrl
-
 KeyEvent = namedtuple("KeyEvent", ["key", "time"])
 
-
-class MonitorEvent(BaseModel):
+class MonitorEvent:
     """
     监控的虚拟事件
     """
+    def __init__(self, first_key: Union[keyboard.KeyCode, mouse.Button], 
+                 second_key: Union[keyboard.KeyCode, mouse.Button]) -> None:
+        self.first_key = first_key
+        self.second_key = second_key
 
-    compose_key: keyboard.KeyCode
-    char_key: keyboard.KeyCode
-
-    def hit(self, key: keyboard.KeyCode, last_event: KeyEvent, interval: float) -> bool:
+    def hit(self, key: keyboard.KeyCode, last_event: KeyEvent) -> bool:
         return (
-            key == self.char_key
-            and last_event.key == self.compose_key
-            and time.time() - last_event.time < interval
+            last_event 
+            and key == self.second_key
+            and last_event.key == self.first_key
+            and time.time() - last_event.time < config.COMPOSE_KEY_INTERVAL
         )
 
 
 Ctrl_C: MonitorEvent = MonitorEvent(
-    compose_key=CTRL_KEY, char_key=keyboard.KeyCode.from_char("c")
+    first_key=CTRL_KEY, second_key=keyboard.KeyCode.from_char("c")
+)
+Double_Mouse_Left: MonitorEvent = MonitorEvent( 
+    first_key=mouse.Button.left, second_key=mouse.Button.left
 )
 
-
-class KeystrokeListener(BaseModel):
-    keystroke_queue = Queue()
+class KeystrokeListener:
     text_queue = Queue()
-    compose_key_interval: int = Field(1, ge=0.1)
     keyevent_last: KeyEvent = None
+    mouseevent_last: KeyEvent = None
+    executor: ThreadPoolExecutor = ThreadPoolExecutor()
     last_text: str = ""
 
     keyboard_listener = None
@@ -56,39 +58,17 @@ class KeystrokeListener(BaseModel):
         # 设置鼠标监听器
         self.mouse_listener = mouse.Listener(on_click=self._mouse_on_click)
         self.mouse_listener.start()
-
-        threading.Thread(target=self._listener_task, daemon=True).start()
         return
 
     def _keyboard_on_press(self, key):
-        self.keystroke_queue.put(key)
+        if Ctrl_C.hit(key, self.keyevent_last):
+            self.executor.submit(self._process_clipboard)
+        self.keyevent_last = KeyEvent(key=key, time=time.time())
 
     def _mouse_on_click(self, x, y, button, pressed):
-        if pressed and button == mouse.Button.left:
-            # wait for the ctrl key to be pressed
-            try:
-                key = self.keystroke_queue.get(timeout=self.compose_key_interval)
-                if key == CTRL_KEY:
-                    try:
-                        while True:
-                            processed_text = text_queue.get(timeout=1)
-                            pyautogui.typewrite(processed_text)
-                    except Exception as e:
-                        logger.info(f"get buffered processed text timeout: {e}, return")
-            except Exception as e:
-                logger.exception(f"get keystroke key failed: {e}")
-
-    def _listener_task(self):
-        """
-        监听所有按键信息，包括键盘和鼠标
-        """
-        while True:
-            key = self.keystroke_queue.get()
-            if Ctrl_C.hit(key, self.keyevent_last, self.compose_key_interval):
-                ## Ctrl+C 事件
-                self._process_clipboard()
-
-            self.keyevent_last = KeyEvent(key=key, time=time.time())
+        if pressed and Double_Mouse_Left.hit(button, self.mouseevent_last):
+            self.executor.submit(self._process_typewrite)
+        self.mouseevent_last = KeyEvent(key=button, time=time.time())
 
     def _process_clipboard(self):
         for _ in range(10):
@@ -98,7 +78,7 @@ class KeystrokeListener(BaseModel):
             if clipboard_content != self.last_text:
                 break
         if clipboard_content == self.last_text:
-            logger.info("剪贴板内容未更新")
+            logger.warning("剪贴板内容未更新")
             return
         self.last_text = clipboard_content
 
@@ -111,9 +91,14 @@ class KeystrokeListener(BaseModel):
             self.text_queue.put(c)
             time.sleep(0.1)
 
-
-print("Mac剪贴板助手已启动。按Ctrl+C复制文本,按Ctrl+鼠标左键粘贴处理后的文本。")
-
+    def _process_typewrite(self):
+        try:
+            while True:
+                pyautogui.typewrite(self.text_queue.get(timeout=1))
+        except QueueEmptyException:
+            pass
+        except Exception as e:
+            logger.exception(f"get buffered processed text timeout: {repr(e)}, return")
 
 def main(log_level: str = "INFO"):
     logger.remove()
