@@ -7,7 +7,7 @@ from . import model_spec as spec
 from .role import Role
     
 class QianfanLLM(LLM):
-    model_spec: spec.QianFanModel
+    model_spec: spec.LLMModelSpec
     # （1）较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定
     # （2）默认0.8，范围 (0, 1.0]，不能为0
     temperature: float = 0.8
