@@ -4,7 +4,7 @@
 import getpass
 from atlassian import Confluence
 from langchain_community.document_loaders import ConfluenceLoader
-from . import * 
+from .base import * 
 
 class ConfluenceConf(BaseConf):
     url: str
@@ -15,11 +15,9 @@ class ConfluenceConf(BaseConf):
 class ConfluenceStore(BaseStore):
     def __init__(self, name:str, persist_path:str, emb_func: Embeddings, extra_config: ConfluenceConf):
         super().__init__(name, persist_path, emb_func, extra_config)
-        self._vector_store = Chroma(collection_name=name, 
-                                    embedding_function=emb_func, 
-                                    persist_directory=self._persist_path)
+        
 
-    def __download__(self):
+    def __transform__(self):
         def get_children_pages_recursively(client, page_id: str):
             child_pages = client.get_page_child_by_type(page_id)
             for page in child_pages:
@@ -44,6 +42,4 @@ class ConfluenceStore(BaseStore):
                 limit=self._extra_config.limit,
             )
             documents = loader.load()
-            for doc in documents:
-                self.add_document(doc.metadata["source"], doc)
-            self.save_documents()
+            self.batch_add_document(documents)
