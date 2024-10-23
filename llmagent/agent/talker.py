@@ -13,5 +13,5 @@ def main(agent_api:str, model_spec:model_spec.LLMModelSpec,
     if agent_api == 'QianFan':
         from ..llmapi import QianfanLLM, QianfanEmbedding
         llm = QianfanLLM(model_spec=model_spec, temperature=0.5)
-        if private_store:
+        # if private_store:
             

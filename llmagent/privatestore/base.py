@@ -9,7 +9,7 @@ from langchain_chroma import Chroma
 
 from loguru import logger
 from pydantic import BaseModel, Field
-from typing import List, Set, Dict, Tuple, Optional, Any, Union
+from typing import List, Set, Dict
 
 class BaseConf(BaseModel):
     batch_size: int = Field(16, gt=1, description="请求embedding时的最大batch，和选择的LLM embeeding api有关")
@@ -23,7 +23,7 @@ class BaseStore:
         self._emb_func = emb_func
         self._extra_config = extra_config
         self._documents_path = Path(persist_path) / "documents.bin"
-        self._documents: Dict[str, Documents] = {}
+        self._documents: Dict[str, Document] = {}
         if self._documents_path.exists():
             with open(self._documents_path, "rb") as f:
                 self._documents = pickle.load(f)
