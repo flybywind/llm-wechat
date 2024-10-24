@@ -4,7 +4,8 @@ class AK_SK:
             line = f.readline().strip()
             seg = line.split(',')
             self.ak = seg[0]
-            self.sk = seg[1]
+            if len(seg) > 1:
+                self.sk = seg[1]
     
     def get_ak(self):
         return self.ak

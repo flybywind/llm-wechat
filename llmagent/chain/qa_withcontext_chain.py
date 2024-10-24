@@ -5,7 +5,7 @@ from .base import *
 
 from .morehistory_retriever import MoreHistoryRetriever
 
-class QAWithContextTemplate(BaseTemplate):
+class QAWithContextChain(BaseChain):
     def _format_docs(self, docs:List[Document]):
         return "\n\n".join(f"{d.page_content}\nsource: {d.metadata['source']}" for d in docs) 
     

@@ -1,10 +1,10 @@
 from langchain_core.retrievers import BaseRetriever
 from langchain.vectorstores import VectorStore
 
-from .base import BaseTemplate
+from .base import BaseChain
 class MoreHistoryRetriever(BaseRetriever):
     vs: VectorStore
-    template: BaseTemplate
+    template: BaseChain
 
     def _get_relevant_documents(
         self, chat_str: str, *, run_manager):

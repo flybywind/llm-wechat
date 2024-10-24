@@ -1,7 +1,10 @@
+from openai import OpenAI
 from langchain_core.outputs import GenerationChunk
+from langchain_core.language_models.base import LanguageModelInput
 from langchain.llms.base import LLM
-from typing import Optional, List
+from typing import Any, Iterator, Optional, List
 from loguru import logger
+from pydantic import Field
 import qianfan
 from qianfan.resources.typing import QfRole
 
@@ -11,7 +14,7 @@ class QianfanLLM(LLM):
     model_spec: spec.LLMModelSpec
     # （1）较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定
     # （2）默认0.8，范围 (0, 1.0]，不能为0
-    temperature: float = 0.8
+    temperature: float = Field(0.8, ge=0.0, le=1.0)
     # 通过对已生成的token增加惩罚，减少重复生成的现象。说明：
     # （1）值越大表示惩罚越大
     # （2）默认1.0，取值范围：[1.0, 2.0]
@@ -68,23 +71,69 @@ class QianfanLLM(LLM):
         stream = self._stream(prompt, stop)
         return "".join(stream)
     
+
+  
+class QwenLLM(LLM):
+    model_spec: spec.LLMModelSpec
+    # （1）较高的数值会使输出更加随机，适用于趣味性，文艺性对话
+    # 而较低的数值会使其更加集中和确定, 适用于专业文档
+    # （2）默认0.8，范围 (0, 1.0]，不能为0
+    temperature: float = Field(0.8, ge=0.0, le=2.0)
+    # 通过对已生成的token增加惩罚，减少重复生成的现象。说明：
+    # （1）值越大表示惩罚越大
+    # （2）默认1.0，取值范围：[-2.0, 2.0]
+    presence_penalty: float = Field(1.0, ge=-2.0, le=2.0)
+    # 是否强制关闭实时搜索功能，
+    enable_search: bool = True
+    max_tokens: int = 5000
+    _model: OpenAI
+
+    def model_post_init(self, ctx):
+        self._model = OpenAI(
+                    # 若没有配置环境变量，请用百炼API Key将下行替换为：api_key="sk-xxx",
+                    # api_key=os.getenv("DASHSCOPE_API_KEY"),
+                    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+                )
+        
+
+    def stream(
+        self,
+        input: LanguageModelInput,
+        config:  None,
+        *,
+        stop: Optional[list[str]] = None,
+        **kwargs: Any,
+    ) -> Iterator[str]:
+        """
+        Handle a single round of the chat by using the current prompt and the previous context.
+        """
+        logger.debug(f"input: {input}")
+        completion = self._model.chat.completions.create(model=self.model_spec.name, 
+                                messages=input,
+                                stream=True,
+                                temperature=self.temperature, 
+                                penalty_score=self.presence_penalty,
+                                enable_search=self.enable_search,
+                                max_tokens=self.max_tokens)
+        for ck in completion:
+            g = GenerationChunk(text=ck.choices[0].delta.content)
+            yield g
+                
     @property
-    def conversation_history(self):
-        return self._conversation_history
-    
+    def _identifying_params(self) -> dict:
+        """Parameters that uniquely identify the LLM."""
+        d = self.__dict__.copy()
+        d['model'] = self.model_spec.name
+        return d
+
     @property
-    def user_question_history(self):
-        return self._user_question_history
+    def _llm_type(self) -> str:
+        """Defines the LLM type."""
+        return f"Qwen_{self.model_spec.name}"
     
-    def add_user_question(self, str):
-        self._user_question_history.append(str)
+    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
+        raise NotImplementedError("This method is not implemented.")
     
-    def clear_history(self):
-        """Clear the conversation history when starting a new conversation."""
-        self._conversation_history = []
-        self._conversation_str_len = []
-        self._user_question_history = []
-        self._current_str_len = 0
     
 class MyCustomLLM(LLM):
     some_param: str

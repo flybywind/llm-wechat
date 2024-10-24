@@ -7,3 +7,4 @@ ERNIE4_8K = LLMModelSpec(name="ERNIE-4.0-8K", max_str_len=20000, max_token_len=5
 ERNIE4_Turbo8K = LLMModelSpec(
     name="ERNIE-4.0-Turbo-8K", max_str_len=20000, max_token_len=5120
 )
+QwenPlus = LLMModelSpec(name="qwen-plus", max_str_len=131_072, max_token_len=129_024)

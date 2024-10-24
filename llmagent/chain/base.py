@@ -15,7 +15,7 @@ class TemplateConf(BaseModel):
     context_num:int = Field(0, ge=0, description="context的数量")
     history_num:int = Field(0, ge=0, description="历史会话的数量")
 
-class BaseTemplate(BaseModel):
+class BaseChain(BaseModel):
     """
     这个模版不仅仅是提示提的模版，也包含了llm，retriever，vectorstore等必备的组件
     """
