@@ -1,10 +1,11 @@
-from io import StringIO
+from langchain_core.outputs import GenerationChunk
 from langchain.llms.base import LLM
 from typing import Optional, List
+from loguru import logger
 import qianfan
+from qianfan.resources.typing import QfRole
 
 from . import model_spec as spec
-from .role import Role
     
 class QianfanLLM(LLM):
     model_spec: spec.LLMModelSpec
@@ -25,75 +26,30 @@ class QianfanLLM(LLM):
     max_content_len: int = 20000
     # max_token_len: int = 1024
     _model: qianfan.ChatCompletion
-    _conversation_history: List[dict]
-    _conversation_str_len: List[int]
-    _user_question_history: List[str]
-    _current_str_len: int
 
     def model_post_init(self, ctx):
         self._model = qianfan.ChatCompletion()
-        self._user_question_history = []
-        self._conversation_history = []  # List to maintain chat history
-        self._conversation_str_len = []
-        self._current_str_len = 0
-        # todo, 看看超出有啥影响？
-        # self.conversation_token_len = []
-        # self.current_token_len = 0
+        
 
-    def _stream(self, prompt: str, stop: Optional[List[str]] = None):
+    def _stream(self, prompt:str, stop: Optional[List[str]] = None, run_manager=None, **kwargs):
         """
         Handle a single round of the chat by using the current prompt and the previous context.
         """
-        # Add the user's input to the conversation history
-        self._conversation_history.append(dict(role=Role.U, content=prompt))
-        self._conversation_str_len.append(len(prompt))
-        self._current_str_len += self._conversation_str_len[-1]
-        # truncate by max_content_len and max_token_len
-        max_str_len = min(self.max_content_len, self.model_spec.max_str_len)
-        # max_token_len = self.model_spec.max_token_len
-
-        start_i = max(0, len(self._conversation_history) - self.history_len)
-        self._current_str_len -= sum(self._conversation_str_len[:start_i])
-        self._conversation_history = self._conversation_history[start_i:]
-        self._conversation_str_len = self._conversation_str_len[start_i:]
-        # need truncate
-        for i, sn in enumerate(self._conversation_str_len):
-            if max_str_len > self._current_str_len:
-                # and max_token_len > self.current_token_len:
-                break
-            self._current_str_len -= sn
-            # self.current_token_len -= tn
-            start_i = i+1
-        if self._conversation_history[start_i]['role'] == Role.A:
-            self._current_str_len -= self._conversation_str_len[start_i]
-            # self.conversation_token_len -= self.conversation_token_len[start_i]
-            start_i += 1
-        self._conversation_history = self._conversation_history[start_i:] 
-        assert len(self._conversation_history) > 0 and self._conversation_history[-1]['role'] == Role.U
-        # Call the model to get the response
+        logger.debug(f"Prompt: {prompt}")
         resp = self._model.do(model=self.model_spec.name, 
-                                messages=self._conversation_history,
+                                messages=[{"role":QfRole.User.value, "content":prompt}],
                                 stream=True,
                                 temperature=self.temperature, 
                                 penalty_score=self.penalty_score,
                                 top_p=self.top_p, 
                                 disable_search=self.disable_search,
                                 max_output_tokens=self.max_output_tokens)
-        full_ans = StringIO()
         for r in resp:
             body = r["body"]
+            g = GenerationChunk(text=body["result"])
             if body["is_end"]:
-                this_content = full_ans.getvalue()
-                full_ans.close()
-                self._conversation_history.append(dict(role=Role.A, content=this_content))
-                self._conversation_str_len.append(len(this_content))
-                self._current_str_len += self._conversation_str_len[-1]
-                # usage = body["usage"]
-                # self.conversation_token_len.append(usage["prompt_tokens"])
-                # self.conversation_token_len.append(usage["completion_tokens"])
-            else:
-                full_ans.write(body["result"])
-            yield body["result"]
+               break
+            yield g
                 
     @property
     def _identifying_params(self) -> dict:

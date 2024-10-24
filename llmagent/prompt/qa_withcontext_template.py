@@ -14,8 +14,8 @@ class QAWithContextTemplate(BaseTemplate):
         self.retriever = MoreHistoryRetriever(vs=self.vectorstore, template=self)
         self._template = ChatPromptTemplate.from_messages(
             [
-                ("system", "你是一个解答用户问题的assistant，可以根据context资料回答问题。请尽量保证回答的内容都可以在context中找到根据，并务必保留资料最后的 source。\n以下是context资料：{context}，\n以下是之前的聊天历史：\n{history}"),
-                ("human", "{question}"),
+                ("system", "你是一个解答用户问题的assistant，可以根据context资料回答问题。请尽量保证回答的内容都可以在context中找到根据，并务必保留资料最后的 source。以下是context资料：\n{context}，\n以下是之前的聊天历史：\n{history}"),
+                ("human", "问题：{question}"),
             ]
         )
         self._langchain =  (
@@ -24,3 +24,8 @@ class QAWithContextTemplate(BaseTemplate):
             | self.llm
             | StrOutputParser()
         )
+
+    def get_history_wo_role(self):
+        return "\n".join([f"{message.content}" 
+                        for message in self._get_history() 
+                        if message.type == "human"])

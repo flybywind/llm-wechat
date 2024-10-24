@@ -4,6 +4,7 @@ import pickle
 from typing import Dict
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
+from langchain_core.vectorstores import VectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 
@@ -74,6 +75,9 @@ class BaseStore:
         with open(self._documents_path, "wb") as f:
             pickle.dump(self._documents, f)
 
+    def vectorstore(self)->VectorStore:
+        return self._vector_store
+    
     def __str__(self):
         return f"{self.__class__.__name__}({self._args}, {self._kwargs})"
 
