@@ -10,10 +10,10 @@ from langchain_chroma import Chroma
 
 from loguru import logger
 from pydantic import BaseModel, Field
-from typing import List, Set, Dict
+from typing import List, Dict
 
 class BaseConf(BaseModel):
-    batch_size: int = Field(16, gt=1, description="请求embedding时的最大batch，和选择的LLM embeeding api有关")
+    batch_size: int = Field(256, gt=1, description="请求embedding时的最大batch")
     chunk_size: int = Field(300, gt=1, description="切分文档时，每个chunk的最大长度")
     chunk_overlap: int = Field(100, gt=1, description="切分文档时，每个chunk的重叠长度")
 

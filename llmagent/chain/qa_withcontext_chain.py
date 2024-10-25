@@ -11,6 +11,7 @@ class QAWithContextChain(BaseChain):
     
     def model_post_init(self, __context: Any) -> None:
         assert self.vectorstore is not None, "需要设置语料库"
+        self.llm.top_p = 0.5
         self.retriever = MoreHistoryRetriever(vs=self.vectorstore, template=self)
         self._template = ChatPromptTemplate.from_messages(
             [

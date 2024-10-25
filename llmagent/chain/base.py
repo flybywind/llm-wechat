@@ -1,3 +1,4 @@
+from openai.types.chat import ChatCompletionMessageParam
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import BaseMessage, HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -46,6 +47,9 @@ class BaseChain(BaseModel):
             lc_msgs = self._template.format_messages(**kwargs)
             if self.llm._llm_type.startswith("QianFan_"):
                 return "\n".join(m.content for m in lc_msgs)
+            elif self.llm._llm_type.startswith("Qwen_"):
+                # convert BaseMessage to dict
+                return [ChatCompletionMessageParam(role=m.type, content=m.content) for m in lc_msgs]
             else:
                 return lc_msgs
             

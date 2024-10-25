@@ -14,14 +14,15 @@ class QianfanLLM(LLM):
     model_spec: spec.LLMModelSpec
     # （1）较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定
     # （2）默认0.8，范围 (0, 1.0]，不能为0
-    temperature: float = Field(0.8, ge=0.0, le=1.0)
+    # temperature: float = Field(0.8, ge=0.0, le=1.0)
     # 通过对已生成的token增加惩罚，减少重复生成的现象。说明：
     # （1）值越大表示惩罚越大
     # （2）默认1.0，取值范围：[1.0, 2.0]
     penalty_score: float = 1.0
     # （1）影响输出文本的多样性，取值越大，生成文本的多样性越强
     # （2）默认0.8，取值范围 [0, 1.0]
-    top_p: float = 1.0
+    # 和temperature类似，建议只设置一个
+    top_p: float = Field(0.8, ge=0.0, le=1.0)
     # 是否强制关闭实时搜索功能，
     disable_search: bool = False
     max_output_tokens: int = 1024
@@ -42,7 +43,6 @@ class QianfanLLM(LLM):
         resp = self._model.do(model=self.model_spec.name, 
                                 messages=[{"role":QfRole.User.value, "content":prompt}],
                                 stream=True,
-                                temperature=self.temperature, 
                                 penalty_score=self.penalty_score,
                                 top_p=self.top_p, 
                                 disable_search=self.disable_search,
@@ -75,10 +75,11 @@ class QianfanLLM(LLM):
   
 class QwenLLM(LLM):
     model_spec: spec.LLMModelSpec
-    # （1）较高的数值会使输出更加随机，适用于趣味性，文艺性对话
-    # 而较低的数值会使其更加集中和确定, 适用于专业文档
-    # （2）默认0.8，范围 (0, 1.0]，不能为0
-    temperature: float = Field(0.8, ge=0.0, le=2.0)
+    # 核采样的概率阈值，用于控制模型生成文本的多样性。
+    # top_p越高，生成的文本更多样。反之，生成的文本更确定。
+    # 取值范围：（0,1.0]
+    # 由于temperature与top_p均可以控制生成文本的多样性，因此建议您只设置其中一个值。
+    top_p: float = Field(0.8, ge=0.0, le=1.0)
     # 通过对已生成的token增加惩罚，减少重复生成的现象。说明：
     # （1）值越大表示惩罚越大
     # （2）默认1.0，取值范围：[-2.0, 2.0]
@@ -111,10 +112,10 @@ class QwenLLM(LLM):
         completion = self._model.chat.completions.create(model=self.model_spec.name, 
                                 messages=input,
                                 stream=True,
-                                temperature=self.temperature, 
-                                penalty_score=self.presence_penalty,
-                                enable_search=self.enable_search,
-                                max_tokens=self.max_tokens)
+                                top_p=self.top_p, 
+                                presence_penalty=self.presence_penalty,
+                                max_tokens=self.max_tokens,
+                                extra_body={"enable_search":self.enable_search})
         for ck in completion:
             g = GenerationChunk(text=ck.choices[0].delta.content)
             yield g

@@ -1,5 +1,5 @@
 from . import model_spec
-from .llm import QianfanLLM
-from .embedding import QianfanEmbedding
+from .llm import QianfanLLM, QwenLLM
+from .embedding import QianfanEmbedding, QwenEmbedding
 
-__all__ = ["QianfanLLM", "QianfanEmbedding", "model_spec"]
+__all__ = ["QianfanLLM","QwenLLM", "QianfanEmbedding", "QwenEmbedding", "model_spec"]
