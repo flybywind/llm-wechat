@@ -1,4 +1,9 @@
 from openai import OpenAI
+from openai.types.chat import (
+    ChatCompletionSystemMessageParam,
+    ChatCompletionUserMessageParam,
+    ChatCompletionAssistantMessageParam,
+)
 from langchain_core.outputs import GenerationChunk
 from langchain_core.language_models.base import LanguageModelInput
 from langchain.llms.base import LLM
@@ -9,7 +14,7 @@ import qianfan
 from qianfan.resources.typing import QfRole
 
 from . import model_spec as spec
-    
+
 class QianfanLLM(LLM):
     model_spec: spec.LLMModelSpec
     # （1）较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定
@@ -33,7 +38,6 @@ class QianfanLLM(LLM):
 
     def model_post_init(self, ctx):
         self._model = qianfan.ChatCompletion()
-        
 
     def _stream(self, prompt:str, stop: Optional[List[str]] = None, run_manager=None, **kwargs):
         """
@@ -51,9 +55,9 @@ class QianfanLLM(LLM):
             body = r["body"]
             g = GenerationChunk(text=body["result"])
             if body["is_end"]:
-               break
+                break
             yield g
-                
+
     @property
     def _identifying_params(self) -> dict:
         """Parameters that uniquely identify the LLM."""
@@ -65,14 +69,13 @@ class QianfanLLM(LLM):
     def _llm_type(self) -> str:
         """Defines the LLM type."""
         return f"QianFan_{self.model_spec.name}"
-    
+
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
         """Call the QianFan API to generate the response."""
         stream = self._stream(prompt, stop)
         return "".join(stream)
-    
 
-  
+
 class QwenLLM(LLM):
     model_spec: spec.LLMModelSpec
     # 核采样的概率阈值，用于控制模型生成文本的多样性。
@@ -95,7 +98,6 @@ class QwenLLM(LLM):
                     # api_key=os.getenv("DASHSCOPE_API_KEY"),
                     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
                 )
-        
 
     def stream(
         self,
@@ -108,18 +110,41 @@ class QwenLLM(LLM):
         """
         Handle a single round of the chat by using the current prompt and the previous context.
         """
-        logger.debug(f"input: {input}")
-        completion = self._model.chat.completions.create(model=self.model_spec.name, 
-                                messages=input,
-                                stream=True,
-                                top_p=self.top_p, 
-                                presence_penalty=self.presence_penalty,
-                                max_tokens=self.max_tokens,
-                                extra_body={"enable_search":self.enable_search})
+        mesg_list = []
+        for m in input:
+            if m.type == "system":
+                mesg_list.append(
+                    ChatCompletionSystemMessageParam(role="system", content=m.content)
+                )
+            elif m.type == "human":
+                mesg_list.append(
+                    ChatCompletionUserMessageParam(role="user", content=m.content)
+                )
+            elif m.type == "ai":
+                mesg_list.append(
+                    ChatCompletionAssistantMessageParam(
+                        role="assistant", content=m.content
+                    )
+                )
+            else:
+                raise ValueError(f"unknown message type {m.type}")
+        logger.debug(
+            f"input after transform to ChatCompletionMessageParam: {mesg_list}"
+        )
+        completion = self._model.chat.completions.create(
+            model=self.model_spec.name,
+            messages=mesg_list,
+            stream=True,
+            top_p=self.top_p,
+            presence_penalty=self.presence_penalty,
+            max_tokens=self.max_tokens,
+            extra_body={"enable_search": self.enable_search},
+        )
         for ck in completion:
-            g = GenerationChunk(text=ck.choices[0].delta.content)
-            yield g
-                
+            ans = ck.choices[0].delta.content
+            if ans:
+                yield ans
+
     @property
     def _identifying_params(self) -> dict:
         """Parameters that uniquely identify the LLM."""
@@ -131,11 +156,11 @@ class QwenLLM(LLM):
     def _llm_type(self) -> str:
         """Defines the LLM type."""
         return f"Qwen_{self.model_spec.name}"
-    
+
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
         raise NotImplementedError("This method is not implemented.")
-    
-    
+
+
 class MyCustomLLM(LLM):
     some_param: str
     _a : int

@@ -1,6 +1,5 @@
-from openai.types.chat import ChatCompletionMessageParam
 from langchain.prompts import ChatPromptTemplate
-from langchain.schema import BaseMessage, HumanMessage, AIMessage
+from langchain.schema import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import Runnable
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
@@ -47,14 +46,11 @@ class BaseChain(BaseModel):
             lc_msgs = self._template.format_messages(**kwargs)
             if self.llm._llm_type.startswith("QianFan_"):
                 return "\n".join(m.content for m in lc_msgs)
-            elif self.llm._llm_type.startswith("Qwen_"):
-                # convert BaseMessage to dict
-                return [ChatCompletionMessageParam(role=m.type, content=m.content) for m in lc_msgs]
             else:
                 return lc_msgs
-            
+
         return RunnableLambda(__runnable_lambda)
-    
+
     def stream(self, question:str):
         ans = []
         try:
@@ -69,27 +65,30 @@ class BaseChain(BaseModel):
 
     def invoke(self, question:str):
         return "".join(self.stream(question))
-    
+
     def _get_history(self):
         return self._history[-self.conf.history_num*2:]
-    
+
     def get_history(self):
         """
         用在prompt中，用来生成问题的context
         """
         return "\n".join([f"{message.type}: {message.content}" 
                         for message in self._get_history()])
-    
+
     def get_history_wo_role(self):
         """
         可以用来做retriever的输入，召回更多有用的内容
         """
-        return "\n".join([f"{message.content}" 
-                        for message in self._get_history()])
-    
+        return "\n".join(
+            [
+                f"{message.content}"
+                for message in self._get_history()
+                if message.type == "ai"
+            ]
+        )
+
     def _update_history(self, ans:str):
         if self._current_human_question and ans:
             self._history+=[HumanMessage(content=self._current_human_question),
                         AIMessage(content=ans)]
-        
-    

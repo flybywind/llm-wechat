@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import pickle
 from typing import Dict
@@ -10,7 +9,7 @@ from langchain_chroma import Chroma
 
 from loguru import logger
 from pydantic import BaseModel, Field
-from typing import List, Dict
+from typing import List, Dict, Set
 
 class BaseConf(BaseModel):
     batch_size: int = Field(256, gt=1, description="请求embedding时的最大batch")
