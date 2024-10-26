@@ -6,7 +6,6 @@ from datetime import datetime
 import platform
 import re
 
-
 class SearchableSettingsDialog(tk.Toplevel):
     def __init__(self, parent, config_manager):
         super().__init__(parent)
@@ -18,6 +17,22 @@ class SearchableSettingsDialog(tk.Toplevel):
 
         # 设置最小窗口大小
         self.minsize(500, 300)
+
+        # 设置窗口样式
+        if platform.system() == "Darwin":  # macOS
+            try:
+                self.tk.call(
+                    "::tk::unsupported::MacWindowStyle",
+                    "style",
+                    self._w,
+                    "moveableModal",
+                    "",
+                )
+            except tk.TclError:
+                pass  # 如果设置失败，继续使用默认样式
+
+        # 添加ESC键关闭窗口
+        self.bind("<Escape>", lambda e: self.destroy())
 
         # 添加搜索框占位符文本处理方法
         self.placeholder_text = "Search settings..."
@@ -70,6 +85,15 @@ class SearchableSettingsDialog(tk.Toplevel):
         # 创建主容器
         self.main_container = ttk.Frame(self)
         self.main_container.pack(fill=tk.BOTH, expand=True)
+
+        # 创建顶部栏（包含关闭按钮）
+        top_bar = ttk.Frame(self.main_container)
+        top_bar.pack(fill=tk.X, pady=(5, 0))
+
+        # 添加设置标题
+        ttk.Label(top_bar, text="Settings", font=("", 12, "bold")).pack(
+            side=tk.LEFT, padx=10
+        )
 
         # 创建搜索框区域（使用特殊样式）
         search_container = ttk.Frame(self.main_container, style="Search.TFrame")
@@ -293,7 +317,6 @@ class SearchableSettingsDialog(tk.Toplevel):
             self.search_entry.insert(0, self.placeholder_text)
             self.search_entry.configure(foreground="gray")
 
-
 class ConfigManager:
     def __init__(self):
         self.config_file = "app_config.json"
@@ -319,7 +342,6 @@ class ConfigManager:
     def set_config(self, key, value):
         self.config[key] = value
         self.save_config()
-
 
 class ChatApp:
     def __init__(self, root):
@@ -407,12 +429,10 @@ class ChatApp:
         self.chat_text.configure(state=tk.DISABLED)
         self.chat_text.see(tk.END)
 
-
 def main():
     root = tk.Tk()
     app = ChatApp(root)
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()
