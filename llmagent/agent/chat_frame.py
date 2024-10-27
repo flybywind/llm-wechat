@@ -24,8 +24,8 @@ class ChatFrame:
             self.chat_frame,
             background="#ffffff",
             html="<body style='background-color: #ffffff;'></body>",
-            pady=10,
-            padx=10,
+            pady=0,
+            padx=0,
             wrap=tk.WORD,
         )
         self.chat_markdown.pack(fill=tk.BOTH, expand=True)
