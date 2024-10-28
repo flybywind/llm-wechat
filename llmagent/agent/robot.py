@@ -1,5 +1,7 @@
+import sys
 import tkinter as tk
 import platform
+from loguru import logger
 
 from .conf_manager import ConfigManager
 from .setting_dialog import SearchableSettingsDialog
@@ -51,7 +53,25 @@ class ChatApp:
         # 创建demo输入
         self.chat_frame.add_demo_messages()
 
+
+def start_keystroke_event_listener():
+    from .event_listener import KeystrokeListener
+
+    keystroke_listener = KeystrokeListener()
+    keystroke_listener.start()
+
+
 def main():
+    from ..conf import config
+
+    logger.remove()
+    logger.add(
+        sys.stdout,
+        level=config.LOG_LEVEL,
+        enqueue=True,
+    )
+
+    start_keystroke_event_listener()
     root = tk.Tk()
     app = ChatApp(root)
     root.mainloop()

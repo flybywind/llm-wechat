@@ -3,6 +3,9 @@ import json
 
 
 class ConfigManager:
+    """
+    langchain相关的配置
+    """
     def __init__(self):
         self.config_file = "app_config.json"
         self.config = self.load_config()
