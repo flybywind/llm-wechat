@@ -13,11 +13,13 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Yiyan_langchain",
+      "name": "test_app",
       "type": "debugpy",
       "request": "launch",
-      "program": "yiyan_langchain.py",
+      "program": "test_robot_app.py",
+      "justMyCode": false,
       "console": "integratedTerminal"
     }
+
   ]
 }

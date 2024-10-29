@@ -55,7 +55,7 @@ class BaseChain(BaseModel):
         ans = []
         try:
             for tok in self._langchain.stream(question):
-                t = str(tok).strip()
+                t = str(tok)
                 yield t
                 ans.append(t)
             self._update_history("".join(ans))

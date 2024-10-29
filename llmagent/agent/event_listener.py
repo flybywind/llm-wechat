@@ -1,13 +1,13 @@
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
 import sys
+from threading import Timer
 from loguru import logger
 import platform
 import pyperclip
 from pynput import keyboard, mouse
 import pyautogui
 import time
-import threading
 from typing import Union
 from queue import Queue, Empty as QueueEmptyException
 
@@ -46,9 +46,39 @@ Double_Mouse_Left: MonitorEvent = MonitorEvent(
     first_key=mouse.Button.left, second_key=mouse.Button.left
 )
 
+Ctrl_Mouse_Left: MonitorEvent = MonitorEvent(
+    first_key=CTRL_KEY, second_key=mouse.Button.left
+)
+
+class TimeoutQueue:
+    def __init__(self, timeout:int = -1, maxsize: int = 0) -> None:
+        self._queue = Queue(maxsize)
+        self._timeout = timeout
+        self._timer = None
+        self._reset_timer()
+
+    def get(self, block=True, timeout=1):
+        return self._queue.get(block=block, timeout=timeout)
+
+    def put(self, item, block: bool = True, timeout: float | None = None) -> None:
+        self._reset_timer()
+        return self._queue.put(item, block, timeout)
+    
+    def _make_empty(self):
+        logger.info(f"timer tick hit after {self._timeout}s, make queue empty")
+        self._queue = Queue()
+    
+    def _reset_timer(self):
+        if self._timeout < 0: return
+        if self._timer:
+            self._timer.cancel()
+            del self._timer
+        self._timer = Timer(self._timeout, self._make_empty)
+        self._timer.start()
 
 class KeystrokeListener:
-    text_queue = Queue()
+    text_queue = TimeoutQueue(60)
+    text_queue_ai = Queue()
     keyevent_last: KeyEvent = None
     mouseevent_last: KeyEvent = None
     executor: ThreadPoolExecutor = ThreadPoolExecutor()
@@ -56,6 +86,7 @@ class KeystrokeListener:
 
     keyboard_listener = None
     mouse_listener = None
+    langchain = None
 
     def start(self):
         # 设置键盘监听器
@@ -66,13 +97,17 @@ class KeystrokeListener:
         self.mouse_listener.start()
         return
 
+    def set_langchain(self, langchain):
+        self.langchain = langchain
+
     def _keyboard_on_press(self, key):
         if Ctrl_C.hit(key, self.keyevent_last):
             self.executor.submit(self._process_clipboard)
         self.keyevent_last = KeyEvent(key=key, time=time.time())
 
     def _mouse_on_click(self, x, y, button, pressed):
-        if pressed and Double_Mouse_Left.hit(button, self.mouseevent_last):
+        if pressed and Ctrl_Mouse_Left.hit(button, self.keyevent_last) \
+            and Double_Mouse_Left.hit(button, self.mouseevent_last):
             self.executor.submit(self._process_typewrite)
         self.mouseevent_last = KeyEvent(key=button, time=time.time())
 
@@ -89,13 +124,16 @@ class KeystrokeListener:
         self.last_text = clipboard_content
 
         # 处理剪贴板内容 (这里只是一个简单的示例,您可以根据需要修改)
-        processed_text = clipboard_content.upper()
-        logger.info(f"检测到Ctrl+C,处理后的文本: {processed_text}")
-        # 将处理后的文本放入队列
-        for c in processed_text:
-            # 模拟流式处理
-            self.text_queue.put(c)
-            time.sleep(0.1)
+        if self.langchain:
+            processed_text = self.langchain.stream(clipboard_content)
+            # logger.info(f"检测到Ctrl+C,处理后的文本: {processed_text}")
+            self.text_queue = TimeoutQueue(60)
+            for c in processed_text:
+                self.text_queue.put(c)
+                self.text_queue_ai.put(c)
+            self.text_queue_ai.put("<END>")
+        else:
+            logger.warning("未设置langchain, 无法处理剪贴板内容")
 
     def _process_typewrite(self):
         try:

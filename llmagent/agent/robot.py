@@ -1,16 +1,21 @@
 import sys
+from time import sleep
 import tkinter as tk
 import platform
+import traceback
 from loguru import logger
 
 from .conf_manager import ConfigManager
 from .setting_dialog import SearchableSettingsDialog
 from .chat_frame import ChatFrame
+from .event_listener import KeystrokeListener
 
 class ChatApp:
-    def __init__(self, root):
+    def __init__(self, root, listener: KeystrokeListener):
         self.root = root
         self.root.title("Chat Application")
+        self.listener_for_langchain = listener
+        self.text_queue_ai = listener.text_queue_ai
         self.config_manager = ConfigManager()
 
         # 设置主窗口大小
@@ -21,6 +26,12 @@ class ChatApp:
 
         # 绑定快捷键
         self.bind_shortcuts()
+        
+        self.update_langchain()
+
+    def update_langchain(self):
+        langchain = self.config_manager.get_langchain_or_default()
+        self.listener_for_langchain.set_langchain(langchain)
 
     def bind_shortcuts(self):
         """绑定全局快捷键"""
@@ -33,6 +44,8 @@ class ChatApp:
     def open_settings(self, event=None):
         """打开设置窗口"""
         SearchableSettingsDialog(self.root, self.config_manager)
+        # 每次都检查一下langchain是否有变化，并重置一下
+        self.update_langchain()
 
     def create_widgets(self):
         # 创建菜单栏
@@ -49,29 +62,40 @@ class ChatApp:
         )
 
         # 创建聊天显示区域
-        self.chat_frame = ChatFrame(self.root)
+        self.chat_frame = ChatFrame(self.root, self.text_queue_ai)
         # 创建demo输入
-        self.chat_frame.add_demo_messages()
+        # self.chat_frame.add_demo_messages()
 
 
 def start_keystroke_event_listener():
-    from .event_listener import KeystrokeListener
 
     keystroke_listener = KeystrokeListener()
     keystroke_listener.start()
+    return keystroke_listener
 
+def create_app(listener):
+    try:
+        root = tk.Tk()
+        app = ChatApp(root, listener)
+        root.mainloop()
+        # sleep(10)
+    except Exception as e:
+        logger.exception("Error in create_app:", e)
+        raise
 
 def main():
-    from ..conf import config
+    try:
+        from ..conf import config
 
-    logger.remove()
-    logger.add(
-        sys.stdout,
-        level=config.LOG_LEVEL,
-        enqueue=True,
-    )
+        logger.remove()
+        logger.add(
+            sys.stdout,
+            level=config.LOG_LEVEL,
+            enqueue=True,
+        )
 
-    start_keystroke_event_listener()
-    root = tk.Tk()
-    app = ChatApp(root)
-    root.mainloop()
+        listener = start_keystroke_event_listener()
+        create_app(listener)
+    except Exception as e:
+        logger.exception(e) 
+
