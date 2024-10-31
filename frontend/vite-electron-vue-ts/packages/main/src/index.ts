@@ -1,8 +1,9 @@
-import {app} from 'electron';
-import './security-restrictions';
+import { app } from 'electron';
 import {restoreOrCreateWindow} from '/@/mainWindow.js';
 import {platform} from 'node:process';
 import updater from 'electron-updater';
+import { createLogger } from './logger';
+import './security-restrictions';
 
 // Export for tests
 export {restoreOrCreateWindow};
@@ -13,6 +14,7 @@ export function initApp() {
   /**
    * Prevent electron from running multiple instances.
    */
+  const logger = createLogger();
   const isSingleInstance = app.requestSingleInstanceLock();
   if (!isSingleInstance) {
     app.quit();
@@ -51,23 +53,24 @@ export function initApp() {
    * Install Vue.js or any other extension in development mode only.
    * Note: You must install `electron-devtools-installer` manually
    */
-  // if (import.meta.env.DEV) {
-  //   app
-  //     .whenReady()
-  //     .then(() => import('electron-devtools-installer'))
-  //     .then(module => {
-  //       const {default: installExtension, VUEJS_DEVTOOLS} =
-  //         //@ts-expect-error Hotfix for https://github.com/cawa-93/vite-electron-builder/issues/915
-  //         typeof module.default === 'function' ? module : (module.default as typeof module);
-  //
-  //       return installExtension(VUEJS_DEVTOOLS, {
-  //         loadExtensionOptions: {
-  //           allowFileAccess: true,
-  //         },
-  //       });
-  //     })
-  //     .catch(e => console.error('Failed install extension:', e));
-  // }
+  if (import.meta.env.DEV) {
+    logger.info('Installing Vue.js DevTools');
+    app
+      .whenReady()
+      .then(() => import('electron-devtools-installer'))
+      .then(module => {
+        const { default: installExtension, VUEJS_DEVTOOLS } =
+          //@ts-expect-error Hotfix for https://github.com/cawa-93/vite-electron-builder/issues/915
+          typeof module.default === 'function' ? module : (module.default as typeof module);
+
+        return installExtension(VUEJS_DEVTOOLS, {
+          loadExtensionOptions: {
+            allowFileAccess: true,
+          },
+        });
+      })
+      .catch(e => console.error('Failed install extension:', e));
+  }
 
   /**
    * Check for app updates, install it in background and notify user that new version was installed.
