@@ -41,12 +41,16 @@
     "eslint-plugin-vue": "9.30.0",
     "globals": "15.11.0",
     "playwright": "1.48.2",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
     "typescript-eslint": "8.12.2"
   },
   "dependencies": {
     "@vite-electron-builder/main": "*",
     "electron-log": "^5.2.0",
-    "js-logger": "^1.6.1",
-    "pino": "^9.5.0"
+    "eventsource-parser": "^3.0.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-highlightjs": "^4.2.0",
+    "vue": "^3.5.12"
   }
 }

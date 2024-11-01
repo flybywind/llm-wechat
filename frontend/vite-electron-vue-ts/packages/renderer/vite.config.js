@@ -1,7 +1,8 @@
 import {chrome} from '../../.electron-vendors.cache.json';
 import vue from '@vitejs/plugin-vue';
 import {join} from 'node:path';
-
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
 const PACKAGE_ROOT = __dirname;
 const PROJECT_ROOT = join(PACKAGE_ROOT, '../..');
 
@@ -34,6 +35,9 @@ const config = {
     },
     emptyOutDir: true,
     reportCompressedSize: false,
+  },
+  css: {
+    postcss: './postcss.config.js'
   },
   test: {
     environment: 'happy-dom',
