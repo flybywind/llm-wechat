@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite build && vite preview --host"
+    "preview": "vite build && vite preview --host",
+    "watch": "nodemon --config nodemon.json"
   },
   "dependencies": {
     "pinia": "^2.2.5",
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.1.4",
+    "nodemon": "^3.1.7",
     "sass": "^1.80.6",
     "vite": "^5.4.10"
   }
