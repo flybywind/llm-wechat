@@ -79,7 +79,6 @@ class StreamingMarkdownViewer:
 
     def update_content(self, new_content: str):
         """更新内容并通知WebView刷新"""
-        old_content = self.content
         self.content += new_content
         html_content = self.md.convert(self.content)
         if self.window:
@@ -87,14 +86,7 @@ class StreamingMarkdownViewer:
                 script = f"updateContent(`{html_content}`)"
                 self.window.evaluate_js(script)
             except Exception as e:
-                logger.warning(
-                    f"Error updating content: {e}, use <pre> to show content"
-                )
-                html_content = (
-                    self.md.convert(old_content) + "<pre>" + new_content + "</pre>"
-                )
-                script = f"updateContent(`{html_content}`)"
-                self.window.evaluate_js(script)
+                logger.warning(f"Error updating content: {e}, skipping update")
 
     async def process_stream(self):
         """处理更新队列中的内容"""
@@ -134,6 +126,7 @@ def hello_world():
 
     for char in markdown_content:
         yield char
+        time.sleep(0.1)
 
 
 def main():
