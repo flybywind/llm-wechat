@@ -133,8 +133,8 @@ def main():
     viewer = StreamingMarkdownViewer()
 
     # 创建初始HTML文件
-    html_file = viewer.create_temp_html()
-
+    # html_file = viewer.create_temp_html()
+    html_file = "html/dist/index.html"
     def start_streaming(viewer: StreamingMarkdownViewer):
         # 模拟从API获取流式响应
         for chunk in simulate_openai_stream():

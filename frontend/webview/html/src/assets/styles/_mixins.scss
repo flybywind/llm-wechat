@@ -3,7 +3,7 @@
     justify-content: center;
     align-items: center;
 }
-  
+
 @mixin responsive($breakpoint) {
     @if $breakpoint == tablet {
         @media (min-width: 768px) { @content; }
