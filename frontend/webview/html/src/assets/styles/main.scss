@@ -13,6 +13,13 @@ body {
   line-height: 1.6;
 }
 
-flex-root {
+.flex-root {
   display: flex;
+}
+
+.flex-vert {
+  @include flexCenter;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
 }

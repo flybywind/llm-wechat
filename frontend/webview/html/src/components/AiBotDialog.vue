@@ -11,7 +11,7 @@
 </div>
 </template>
 
-<script>
+<script setup>
 import {
   ref
 } from 'vue'
@@ -28,7 +28,7 @@ const count = ref(0)
 
 <style lang="scss" scoped>
 .side-bar {
-  width: 20%;
+  flex: 1;
   height: 100%;
   padding: 2rem;
 
@@ -55,8 +55,10 @@ const count = ref(0)
   }
 }
 .dialog-window {
-  width: 70%;
+  flex: 5;
   border-left: $secondary-color 2px solid;
   margin-left: 10px;
+  padding: 2rem;
+  height: 100%;
 }
 </style>
