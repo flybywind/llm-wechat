@@ -19,7 +19,7 @@
     name: "AI",
     type: "ai",
     timestamp: "2021-01-01 00:00:00",
-    content: "## Hello Vue 3 + Vite\n\n** code: **\n\n```python\nprint('Hello World')\n```",
+    content: "## Hello Vue 3 + Vite\n\n*code:*\n\n```python\nprint('Hello World')\n```",
   }];
   const chatListRef = ref(chatList);
   var chatCompRef = useTemplateRef('chatCompRef');

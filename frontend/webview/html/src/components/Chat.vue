@@ -5,13 +5,15 @@
         <span class="name">{{ info.name }}</span>
         <span class="timestamp">{{ `[${info.timestamp}]` }}</span>
       </div>
-      <div class="sentence" v-html="markdownContent.value"></div>
+      <div class="sentence" v-html="markdownContent"></div>
     </div>
   </div>
 </template>
 
 <script setup>
   import { defineProps, defineExpose, ref, computed } from "vue";
+  import SmartMarkdownConverter from "../utils/smart_markdown";
+  const converter = new SmartMarkdownConverter();
   const props = defineProps({
     Info: {
       type: Object,
@@ -27,7 +29,11 @@
   var info = ref(props.Info);
   var rawContent = ref("");
   const markdownContent = computed(() =>{
-    return rawContent;
+    if (info.value.type === "user") {
+      return rawContent.value;
+    }
+    const html = converter.convert(rawContent.value);
+    return html;
   })
 
   function updateContent(content) {
