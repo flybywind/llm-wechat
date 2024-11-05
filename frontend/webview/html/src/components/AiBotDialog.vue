@@ -34,7 +34,7 @@
 <template>
   <div class="flex-root">
     <div class="side-bar">
-      <h1>收藏历史</h1>
+      <h3>收藏历史</h3>
       <div class="history"></div>
     </div>
     <div class="dialog-window">

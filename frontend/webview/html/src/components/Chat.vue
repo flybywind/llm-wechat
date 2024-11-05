@@ -52,7 +52,6 @@
     &.role-user {
       justify-content: flex-end;
       max-width: 100%;
-
       .sentence {
         border-bottom: $primary-color 1px solid;
       }
@@ -69,7 +68,8 @@
     }
 
     .timestamp {
-      font-size: 0.9em;
+      padding: 0 0.3em;
+      font-size: 0.8em;
     }
   }
 </style>
