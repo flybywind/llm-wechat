@@ -1,6 +1,8 @@
 // 导入所需库
 import { marked } from 'marked';
-
+/**
+ * 专门针对流式文本流的markdown转换器。通常都是在结尾处可能有不合法的markdown代码块。
+ */
 class SmartMarkdownConverter {
   constructor(options = {}) {
     this.options = {
@@ -10,104 +12,41 @@ class SmartMarkdownConverter {
       sanitize: true,
       smartLists: true,
       smartypants: true,
-      ...options
+      ...options,
     };
+    this.valid_code_prefix = "__CODE_BLOCK_";
+    this.invalid_code_prefix = "__INVALID_BLOCK_";
 
     marked.setOptions(this.options);
   }
 
   /**
    * 预处理Markdown文本，识别并处理代码块
+   * 如果是合法的代码块，则直接通过markdown转换，否则保持原始文本
    * @param {string} text Markdown文本
    * @returns {object} 处理后的文本和代码块映射
    */
   preprocessCodeBlocks(text) {
-    const codeBlocks = new Map();
-    let blockId = 0;
-    let processedText = text;
-    
     // 查找所有以```开始的位置
     const startPositions = [];
     let searchPos = 0;
     while (true) {
-      const pos = processedText.indexOf('```', searchPos);
+      const pos = text.indexOf("```", searchPos);
       if (pos === -1) break;
       startPositions.push(pos);
       searchPos = pos + 3;
     }
 
-    // 如果找到开始标记
-    if (startPositions.length > 0) {
-      // 从后向前处理，避免位置改变影响前面的索引
-      for (let i = startPositions.length - 1; i >= 0; i--) {
-        const startPos = startPositions[i];
-        // 查找下一个```
-        const endPos = processedText.indexOf('```', startPos + 3);
-        
-        if (endPos !== -1) {
-          // 找到配对的结束标记
-          const codeBlock = processedText.substring(startPos, endPos + 3);
-          const placeholder = `__CODE_BLOCK_${blockId}__`;
-          codeBlocks.set(placeholder, codeBlock);
-          
-          // 替换代码块为占位符
-          processedText = processedText.substring(0, startPos) +
-                         placeholder +
-                         processedText.substring(endPos + 3);
-          
-          blockId++;
-        } else {
-          // 未找到配对的结束标记，将剩余文本作为未完成的代码块处理
-          const codeBlock = processedText.substring(startPos);
-          const placeholder = `__INCOMPLETE_CODE_BLOCK_${blockId}__`;
-          codeBlocks.set(placeholder, codeBlock);
-          
-          // 替换未完成的代码块为占位符
-          processedText = processedText.substring(0, startPos) + placeholder;
-          
-          blockId++;
-        }
-      }
+    if (startPositions.length % 2 == 0) {
+      // 有偶数个```，可以配对，说明全是合法的代码块，直接返回
+      return [text, ""];
+    } else {
+      // 有奇数个```，说明有未配对的代码块，将最后一个截取出来
+      return [
+        text.substring(0, startPositions[startPositions.length - 1]),
+        text.substring(startPositions[startPositions.length - 1]),
+      ];
     }
-
-    return { processedText, codeBlocks };
-  }
-
-  /**
-   * 还原代码块
-   * @param {string} text 处理后的文本
-   * @param {Map} codeBlocks 代码块映射
-   * @returns {string} 还原后的文本
-   */
-  restoreCodeBlocks(text, codeBlocks) {
-    let restoredText = text;
-    
-    for (const [placeholder, codeBlock] of codeBlocks.entries()) {
-      if (placeholder.includes('INCOMPLETE')) {
-        // 未配对的代码块，保持原始文本
-        restoredText = restoredText.replace(
-          placeholder,
-          `<pre>${this.escapeHtml(codeBlock)}</pre>`
-        );
-      } else {
-        // 检查代码块是否有效
-        if (this.isValidCodeBlock(codeBlock)) {
-          // 有效的代码块，使用marked转换
-          restoredText = restoredText.replace(
-            placeholder,
-            marked(codeBlock)
-          );
-        } else {
-          // 无效的代码块，保持原始文本
-          restoredText = restoredText.replace(
-            placeholder,
-            `<pre>${this.escapeHtml(codeBlock)}</pre>`
-          );
-        }
-      }
-    }
-    
-    return restoredText;
   }
 
   /**
@@ -117,14 +56,12 @@ class SmartMarkdownConverter {
    */
   isValidCodeBlock(codeBlock) {
     // 检查开始和结束标记
-    const lines = codeBlock.split('\n');
+    const lines = codeBlock.split("\n");
     const firstLine = lines[0].trim();
     const lastLine = lines[lines.length - 1].trim();
 
     // 确保开始和结束都是```，且中间至少有一行内容
-    return firstLine.startsWith('```') && 
-           lastLine === '```' && 
-           lines.length > 2;
+    return firstLine.startsWith("```") && lastLine === "```" && lines.length > 2;
   }
 
   /**
@@ -147,15 +84,14 @@ class SmartMarkdownConverter {
         /\[([^\]]*$)/, // 未闭合的链接
         /\(([^)]*$)/, // 未闭合的括号
         /\|\s*\n[^|]*$/, // 未完成的表格
-      ].some(pattern => pattern.test(text));
+      ].some((pattern) => pattern.test(text));
 
       if (hasInvalidSyntax) {
         return false;
       }
 
       // 检查是否包含至少一个有效的Markdown元素
-      const hasValidElement = Object.values(structureChecks)
-        .some(pattern => pattern.test(text));
+      const hasValidElement = Object.values(structureChecks).some((pattern) => pattern.test(text));
 
       return hasValidElement || text.trim().length === 0;
     } catch (error) {
@@ -169,34 +105,25 @@ class SmartMarkdownConverter {
    * @returns {string} 转换后的HTML或原始文本
    */
   convert(text) {
-    if (!text || typeof text !== 'string') {
-      return '';
+    if (!text || typeof text !== "string") {
+      return "";
     }
 
     // 首先处理代码块
-    const { processedText, codeBlocks } = this.preprocessCodeBlocks(text);
-
-    // 将剩余文本分割成块进行处理
-    const blocks = processedText.split('\n\n');
-    const convertedBlocks = blocks.map(block => {
-      // 如果块包含代码块占位符，保持原样
-      if (Array.from(codeBlocks.keys()).some(placeholder => block.includes(placeholder))) {
-        return block;
-      }
-
-      try {
-        if (this.isValidMarkdown(block)) {
-          return marked(block);
-        } else {
-          return `<pre>${this.escapeHtml(block)}</pre>`;
-        }
-      } catch (error) {
-        return `<pre>${this.escapeHtml(block)}</pre>`;
-      }
-    });
-
-    // 合并处理后的块并还原代码块
-    return this.restoreCodeBlocks(convertedBlocks.join('\n'), codeBlocks);
+    const [validText, incomplteCodeBlocks] = this.preprocessCodeBlocks(text);
+    var htmlText = "";
+    if (this.isValidMarkdown(validText)) {
+      // 如果是合法的Markdown，直接转换
+      htmlText = marked(validText);
+    } else {
+      htmlText = `<pre>${this.escapeHtml(validText)}</pre>`;
+    }
+    if (incomplteCodeBlocks.length > 0) {
+      // 有未配对的代码块，直接返回
+      return htmlText + `<pre>${this.escapeHtml(incomplteCodeBlocks)}</pre>`;
+    } else {
+      return htmlText;
+    }
   }
 
   /**
@@ -206,13 +133,13 @@ class SmartMarkdownConverter {
    */
   escapeHtml(text) {
     const htmlEntities = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
     };
-    return text.replace(/[&<>"']/g, char => htmlEntities[char]);
+    return text.replace(/[&<>"']/g, (char) => htmlEntities[char]);
   }
 }
 
