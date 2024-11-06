@@ -18,7 +18,7 @@
     id: 1,
     name: "AI",
     type: "ai",
-    timestamp: "2021-01-01 00:00:00",
+    timestamp: "2021-01-04 00:00:00",
     content: "## Hello Vue 3 + Vite\n\n*code:*\n\n```python\nprint('Hello World')\n```",
   }];
   const chatListRef = ref(chatList);
@@ -61,7 +61,7 @@
 
     button {
       background-color: $secondary-color;
-      color: white;
+      color: rgb(160, 32, 32);
       border: none;
       padding: 0.5rem 1rem;
       border-radius: 4px;

@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-  import { defineProps, defineExpose, ref, computed } from "vue";
+  import { defineExpose, ref, computed } from "vue";
   import SmartMarkdownConverter from "../utils/smart_markdown";
   const converter = new SmartMarkdownConverter();
   const props = defineProps({
@@ -21,7 +21,7 @@
         id: 0,
         name: "AI",
         type: "ai",
-        timestamp: "2021-01-01 00:00:00",
+        timestamp: "2021-02-02 00:00:00",
       }),
     },
   });
