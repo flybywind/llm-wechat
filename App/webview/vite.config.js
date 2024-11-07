@@ -5,7 +5,7 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
   const isDev = command === "preview" || mode === "development";
-  console.log(`command: ${command}, mode: ${mode}, isDev: ${isDev}`);
+  // console.log(`command: ${command}, mode: ${mode}, isDev: ${isDev}`);
   const baseConfig = {
     plugins: [vue()],
     resolve: {

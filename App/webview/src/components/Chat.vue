@@ -22,22 +22,22 @@
         name: "AI",
         type: "ai",
         timestamp: "2021-02-02 00:00:00",
+        content: "Hello World",
       }),
     },
   });
 
   var info = ref(props.Info);
-  var rawContent = ref("");
   const markdownContent = computed(() =>{
     if (info.value.type === "user") {
-      return rawContent.value;
+      return info.value.content;
     }
-    const html = converter.convert(rawContent.value);
+    const html = converter.convert(info.value.content);
     return html;
   })
 
   function updateContent(content) {
-    rawContent.value += content;
+    info.value.content = content;
   }
   function getChatId() {
     return info.value.id;
