@@ -12,7 +12,7 @@ import AiBotDialog from './components/AiBotDialog.vue'
       <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
     </a>
   </div>
-  <AiBotDialog class="dialog" msg="Vite + Vue" />
+  <AiBotDialog class="dialog"/>
 </div>
 </template>
 

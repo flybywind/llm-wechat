@@ -18,9 +18,22 @@
   const chatListRef = ref(chatList);
   var chatCompRef = useTemplateRef('chatCompRef');
   var intervalId = ref(-1);
+  var textarea = ref(null)
   var sendBtnClass = computed(() => intervalId.value !== -1 ? "stop":"send");
-
-  console.log(chatListRef.value[1].content.hashCode());
+  function askQuestion() {
+    const q = textarea.value;
+    const [newQuestion, newAnswer] = pywebview.api.add_or_update_question(-1, q.value)
+    chatListRef.value.append(newQuestion)
+    chatListRef.value.append(newAnswer)
+    intervalId = setInterval(() => {
+      if (pywebview.api.get_answer() !== "<END>") {
+        chatCompRef.value[id].updateContent(pywebview.api.get_answer());
+      } else {
+        clearInterval(intervalId);
+        intervalId.value = -1;
+      }
+    }, 100);
+  }
   const contentHash = computed(() => {
     chatListRef.value.map((info) => {
       // return hash code of the info.content
@@ -36,12 +49,10 @@
         const id = newVal[i].id;
         if (newVal[i].type === "user"){
           const question = chatListRef.value[id].content;  
-          chatCompRef.value[id].updateContent(question);
-          window.pywebview.api.update_question(i, question);  
+          pywebview.api.add_or_update_question(i, question);  
           intervalId = setInterval(() => {
             if (window.pywebview.api.getAnswer() !== "<END>") {
-              chatCompRef.value[id].updateContent(window.pywebview.api.getAnswer());
-              clearInterval(intervalId);
+              chatCompRef.value[id].updateContent(pywebview.api.get_answer());
             } else {
               clearInterval(intervalId);
               intervalId.value = -1;
@@ -64,8 +75,8 @@
     <div class="dialog-window">
       <Chat v-for="chat in chatListRef" :Info="chat" ref="chatCompRef"></Chat>
       <div class="send-chat">
-        <textarea ></textarea>
-        <button :class="sendBtnClass">发送</button>
+        <textarea ref="textarea"></textarea>
+        <button :class="sendBtnClass" @click="askQuestion"></button>
       </div>
     </div>
   </div>
@@ -123,7 +134,9 @@
       button {
         flex: 1;
         border-radius: 2px;
-        box-shadow: 3px 3px 3px $inactive-color;
+        &:hover {
+          box-shadow: 3px 3px 3px $inactive-color;
+        }
         &.stop::after {
           content: "停止";
         }

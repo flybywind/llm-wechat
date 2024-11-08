@@ -12,3 +12,4 @@ atlassian-python-api~=3.41.16
 pyperclip~=1.9.0
 pynput~=1.7.7
 pyautogui~=0.9.54
+watchfiles~=0.24.0
