@@ -3,10 +3,9 @@ import threading
 import time
 import queue
 from typing import Generator
-
-import uvicorn
 import webview
-import fastapi
+# import uvicorn
+# import fastapi
 from loguru import logger
 
 from .chat_info import ChatInfo, RoleName
@@ -92,24 +91,25 @@ def main():
   )
   webview.start()
 
-server = fastapi.FastAPI()
-api = ChatBackendAPI()
+# server = fastapi.FastAPI()
+# api = ChatBackendAPI()
 
-@server.post("/question")
-async def new_question(qest: str):
-  return api.add_or_update_question(-1, qest)
+# @server.post("/question")
+# async def new_question(qest: str):
+#   return api.add_or_update_question(-1, qest)
 
-@server.put("/question/{id}")
-async def update_question(id: int, qest: str):
-  assert api.chat_list[id].type == RoleName.You
-  return api.add_or_update_question(id, qest)
+# @server.put("/question/{id}")
+# async def update_question(id: int, qest: str):
+#   assert api.chat_list[id].type == RoleName.You
+#   return api.add_or_update_question(id, qest)
 
-@server.get("/answer")
-async def get_answer():
-  return api.get_answer()
+# @server.get("/answer")
+# async def get_answer():
+#   return api.get_answer()
 
 if __name__ == "__main__":
-  is_dev = sys.argv[-1] == "dev"
-  if not is_dev:
-    main()
-  uvicorn.run(server, host="localhost", port=8000)
+  # is_dev = sys.argv[-1] == "dev"
+  # if not is_dev:
+  #   main()
+  # uvicorn.run(server, host="localhost", port=8000)
+  main()
