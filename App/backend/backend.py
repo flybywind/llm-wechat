@@ -19,12 +19,12 @@ class ChatBackendAPI:
         self.chat_list: ChatInfo = []
         self.quest_queue = queue.Queue(1)
         self.answer_queue = queue.Queue(1)
+        self.stop_event = threading.Event()
         self.is_running = True
         self.chain = MockChain()
         threading.Thread(target=self.__askquest_worker, daemon=True).start()
 
     def add_or_update_question(self, idx: int, qest: str):
-        logger.debug("add_or_update_question: idx={}, qest={}", idx, qest)
         if idx == -1:
             idx = len(self.chat_list)
         if idx == len(self.chat_list):
@@ -38,8 +38,9 @@ class ChatBackendAPI:
             self.chat_list.append(ChatInfo(id=idx + 1))
         else:
             self.chat_list[idx + 1] = ChatInfo(id=idx + 1)
-        self.chat_list[idx].content = qest
 
+        logger.debug("add_or_update_question: idx={}, qest={}", idx, qest)
+        self.chat_list[idx].content = qest
         self.quest_queue.put(idx)
         return (self.chat_list[idx].js(), self.chat_list[idx + 1].js())
 
@@ -58,8 +59,11 @@ class ChatBackendAPI:
         ans_str = ans0.content + ans.content
         self.chat_list[id].content = ans_str
         ret = self.chat_list[id].js()
-        logger.debug("get_answer: {}", ret)
         return ret
+
+    def stop_answering(self):
+        logger.debug("stop_answering")
+        self.stop_event.set()
 
     # __func can't be exposed to frontend
     def __askquest_worker(self):
@@ -70,6 +74,10 @@ class ChatBackendAPI:
             stream = self.chain.stream(qest)
             for tok in stream:
                 self.answer_queue.put(ChatInfo(id=idx + 1, content=tok))
+                if self.stop_event.is_set():
+                    logger.debug("clear stop event")
+                    self.stop_event.clear()
+                    break
             self.answer_queue.put(ChatInfo(id=idx + 1, content="<END>"))
 
 

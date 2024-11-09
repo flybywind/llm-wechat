@@ -26,6 +26,10 @@ var sendBtnClass = computed(() => (intervalId.value !== null ? "stop" : "send"))
 //     console.log(`send button class = ${sendBtnClass.value}`);
 // }, 1000);
 function askQuestion(idx) {
+  if (sendBtnClass.value === "stop") {
+    pywebview.api.stop_answering();
+    return;
+  }
   const q = textarea.value;
   pywebview.api.add_or_update_question(idx, q.value).then((new_chats) => {
     const [newQuestion, newAnswer] = new_chats;
