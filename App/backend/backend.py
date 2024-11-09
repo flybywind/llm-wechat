@@ -4,12 +4,14 @@ import threading
 import time
 import queue
 import webview
-# import uvicorn
-# import fastapi
 from loguru import logger
 
 from chat_info import ChatInfo, RoleName
 
+"""
+debug tips：
+需要2次打开inspect才能避免vue 相关的js语法报错。感觉是webview相关的代码和vite build生成的代码之间有些不兼容
+"""
 
 class ChatBackendAPI:
 
@@ -34,8 +36,10 @@ class ChatBackendAPI:
                 )
             )
             self.chat_list.append(ChatInfo(id=idx + 1))
+        else:
+            self.chat_list[idx + 1] = ChatInfo(id=idx + 1)
         self.chat_list[idx].content = qest
-        self.chat_list[idx + 1].content = ""
+
         self.quest_queue.put(idx)
         return (self.chat_list[idx].js(), self.chat_list[idx + 1].js())
 
@@ -47,8 +51,6 @@ class ChatBackendAPI:
         ans0: ChatInfo = self.chat_list[ans.id]
         assert ans0.id == ans.id
         id = ans.id
-        if ans0.content == "":
-            ans0.timestamp = int(time.time() * 1000)
         if ans.content == "<END>":
             logger.debug("get_answer END: {}", ans)
             return ans.js()
@@ -74,8 +76,7 @@ class ChatBackendAPI:
 class MockChain:
     # 模拟OpenAI的流式响应
     def stream(self, q: str):
-        markdown_content = """
-  # 流式Markdown演示
+        markdown_content = """# 流式Markdown演示
 
   这是一个演示文本，将会逐字显示。
 
@@ -90,8 +91,7 @@ class MockChain:
   print("Hello, World!")
   ```
   """
-        markdown_content = """
-  # 流式Markdown演示"""
+        # markdown_content = """# 流式Markdown演示"""
         for char in markdown_content:
             yield char
             time.sleep(0.1)

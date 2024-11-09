@@ -1,25 +1,24 @@
 <script setup>
-import { computed, ref, useTemplateRef, watch } from "vue";
+import { computed, ref, useTemplateRef, watch, reactive } from "vue";
 import Chat from "./Chat.vue";
 import fnv1a from "../utils/hash";
 var chatList = [
-  // {
-  //   id: 0,
-  //   name: "You",
-  //   type: "user",
-  //   timestamp: "2021-02-01 00:00:00",
-  //   content: "answer My question",
-  // },
-  // {
-  //   id: 1,
-  //   name: "AI",
-  //   type: "ai",
-  //   timestamp: "2021-01-04 00:00:00",
-  //   content: "## Hello Vue 3 + Vite\n\n*code:*\n\n```python\nprint('Hello World')\n```",
-  // },
+  {
+    id: 0,
+    name: "You",
+    type: "user",
+    timestamp: "2021-02-01 00:00:00",
+    content: "answer My question",
+  },
+  {
+    id: 1,
+    name: "AI",
+    type: "ai",
+    timestamp: "2021-01-04 00:00:00",
+    content: "## Hello Vue 3 + Vite\n\n*code:*\n\n```python\nprint('Hello World')\n```",
+  },
 ];
-const chatListRef = ref(chatList);
-var chatCompRef = useTemplateRef("chatCompRef");
+const chatListRef = reactive([]);
 var intervalId = ref(null);
 var textarea = ref(null);
 var sendBtnClass = computed(() => (intervalId.value !== null ? "stop" : "send"));
@@ -30,16 +29,21 @@ function askQuestion(idx) {
   const q = textarea.value;
   pywebview.api.add_or_update_question(idx, q.value).then((new_chats) => {
     const [newQuestion, newAnswer] = new_chats;
-    chatListRef.value.push(newQuestion);
-    chatListRef.value.push(newAnswer);
+    if (idx == -1) {
+      chatListRef.push(newQuestion);
+      chatListRef.push(newAnswer);
+    } else {
+      chatListRef[idx] = newQuestion;
+      chatListRef[idx + 1] = newAnswer;
+    }
 
     intervalId.value = setInterval(() => {
       pywebview.api
         .get_answer()
-        .then(info => {
+        .then((info) => {
           // console.log(`id = ${id}, content = ${content}, type = ${type}, timestamp = ${timestamp}`);
           if (info.content !== "<END>") {
-            chatListRef.value[info.id] = info;
+            Object.assign(chatListRef[info.id], info);
           } else {
             clearInterval(intervalId.value);
             intervalId.value = null;
@@ -52,7 +56,7 @@ function askQuestion(idx) {
   });
 }
 const contentHash = computed(() => {
-  chatListRef.value.map((info) => {
+  chatListRef.map((info) => {
     // return hash code of the info.content
     return {
       id: info.id,
@@ -89,10 +93,14 @@ watch(
       <div class="history"></div>
     </div>
     <div class="dialog-window">
-      <Chat v-for="chat in chatListRef" :Info="chat" ref="chatCompRef"></Chat>
+      <div class="session">
+        <Chat v-for="chat in chatListRef" :Info="chat"></Chat>
+      </div>
       <div class="send-chat">
-        <textarea ref="textarea"></textarea>
-        <button :class="sendBtnClass" @click="askQuestion(-1)"></button>
+        <div class="wrapper">
+          <textarea ref="textarea"></textarea>
+          <button :class="sendBtnClass" @click="askQuestion(-1)"></button>
+        </div>
       </div>
     </div>
   </div>
@@ -128,51 +136,63 @@ watch(
 }
 
 .dialog-window {
-  flex: 5;
   display: flex;
+  flex: 5;
   flex-direction: column;
   align-items: stretch;
+  padding-left: 3px;
   border-left: $secondary-color 2px solid;
-  margin-left: 10px;
-  padding: 2rem;
-  height: 100%;
+  .session {
+    flex: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin-left: 10px;
+    padding: 2rem;
+  }
 
   .send-chat {
-    display: flex;
     min-height: 4em;
-
-    textarea {
-      flex: 5;
-      border: none;
-      border-radius: 4px;
-      padding: 0.5rem;
-      margin-right: 1rem;
-    }
-
-    button {
-      flex: 1;
-      border-radius: 2px;
-
-      &:hover {
-        box-shadow: 3px 3px 3px $inactive-color;
+    position: relative;
+    .wrapper {
+      position: absolute;
+      bottom: 3px;
+      right: 10px;
+      padding: 1rem;
+      display: flex;
+      width: 100%;
+      textarea {
+        flex: 5;
+        border: none;
+        border-radius: 4px;
+        padding: 0.5rem;
+        margin-right: 1rem;
       }
 
-      &.stop::after {
-        content: "停止";
-      }
+      button {
+        border-radius: 2px;
+        width: 5em;
+        &:hover {
+          box-shadow: 3px 3px 3px $inactive-color;
+        }
 
-      &.stop {
-        background-color: $inactive-color;
-        color: $secondary-color;
-      }
+        &.stop::after {
+          content: "停止";
+        }
 
-      &.send::after {
-        content: "发送";
-      }
+        &.stop {
+          background-color: $inactive-color;
+          color: $secondary-color;
+        }
 
-      &.send {
-        background-color: #c3deff;
-        color: $text-color;
+        &.send::after {
+          content: "发送";
+        }
+
+        &.send {
+          background-color: #c3deff;
+          color: $text-color;
+        }
       }
     }
   }
