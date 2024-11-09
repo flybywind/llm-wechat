@@ -1,4 +1,20 @@
 {
+  
+  // 编辑器通用配置
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  
+  // Python 文件特定配置
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "modifications"
+    "editor.tabSize": 4,
+    "editor.rulers": [88],  // 显示行长度标尺
+    "editor.formatOnType": true,  // 输入时自动格式化
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"  // 保存时自动整理导入
+    }
+  },
+  
 }

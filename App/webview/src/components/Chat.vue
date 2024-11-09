@@ -3,7 +3,7 @@
     <div class="container">
       <div class="header">
         <span class="name">{{ info.name }}</span>
-        <span class="timestamp">{{ `[${info.timestamp}]` }}</span>
+        <span class="timestamp">{{ `[${timestamp_str}]` }}</span>
       </div>
       <div class="sentence" v-html="markdownContent"></div>
     </div>
@@ -21,13 +21,17 @@
         id: 0,
         name: "AI",
         type: "ai",
-        timestamp: "2021-02-02 00:00:00",
-        content: "Hello World",
+        timestamp: 1700000000,
+        content: "Hello, World!",
       }),
     },
   });
 
   var info = ref(props.Info);
+  var timestamp_str = computed(() => {
+    const date = new Date(info.value.timestamp);
+    return date.toLocaleString();
+  });
   const markdownContent = computed(() =>{
     if (info.value.type === "user") {
       return info.value.content;
@@ -36,16 +40,6 @@
     return html;
   })
 
-  function updateContent(content) {
-    info.value.content = content;
-  }
-  function getChatId() {
-    return info.value.id;
-  }
-  defineExpose({
-    updateContent,
-    getChatId,
-  });
 </script>
 <style lang="scss" scoped>
   .one-chat {
