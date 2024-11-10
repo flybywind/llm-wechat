@@ -22,9 +22,6 @@ const chatListRef = reactive([]);
 var intervalId = ref(null);
 var textarea = ref(null);
 var sendBtnClass = computed(() => (intervalId.value !== null ? "stop" : "send"));
-// setInterval(() => {
-//     console.log(`send button class = ${sendBtnClass.value}`);
-// }, 1000);
 function askQuestion(idx) {
   if (sendBtnClass.value === "stop") {
     pywebview.api.stop_answering();
@@ -45,7 +42,6 @@ function askQuestion(idx) {
       pywebview.api
         .get_answer()
         .then((info) => {
-          // console.log(`id = ${id}, content = ${content}, type = ${type}, timestamp = ${timestamp}`);
           if (info.content !== "<END>") {
             Object.assign(chatListRef[info.id], info);
           } else {
