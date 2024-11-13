@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, useTemplateRef, watch, reactive } from "vue";
+import { computed, ref, watch, reactive } from "vue";
 import Chat from "./Chat.vue";
 import fnv1a from "../utils/hash";
 var chatList = [
@@ -72,10 +72,9 @@ watch(
     const ln = newVal.length;
     for (let i = 0; i < ln; i++) {
       if (newVal[i].hash !== oldVal[i].hash) {
+        console.log("content changed at ", i);
         if (newVal[i].type === "user") {
           askQuestion(newVal[i].id);
-        } else {
-          throw new Error("only user's question can be updated");
         }
       }
     }
