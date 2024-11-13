@@ -24,6 +24,9 @@ class ChatBackendAPI:
         self.chain = MockChain()
         threading.Thread(target=self.__askquest_worker, daemon=True).start()
 
+    def init_chatlist(self):
+        self.chat_list = []
+
     def add_or_update_question(self, idx: int, qest: str):
         if idx == -1:
             idx = len(self.chat_list)
@@ -107,16 +110,16 @@ class MockChain:
 
 import watchfiles
 
-def watch_and_reload(window, html_root, event):
+
+def watch_and_reload(window, api, html_root, event):
     logger.info("Watching for changes in {}", html_root)
     for change in watchfiles.watch(html_root, stop_event=event, debug=True):
-        ## i couldn't get window.load_url() to actually work so I used this instead
-        logger.info("Reloading window as change [{}] triggering", change)
+        api.init_chatlist()
         window.evaluate_js("window.location.reload()")
+
 
 def main():
     # 创建初始HTML文件
-    # html_file = viewer.create_temp_html()
     cur_path = os.path.dirname(os.path.abspath(__file__))
     app_root = os.path.abspath(os.path.join(cur_path, ".."))
     html_root = os.path.join(app_root, "webview/dist")
@@ -137,7 +140,7 @@ def main():
 
     ## using a thread to watch
     reload_thread = threading.Thread(
-        target=watch_and_reload, args=(window, html_root, stop_event), daemon=True
+        target=watch_and_reload, args=(window, api, html_root, stop_event), daemon=True
     )
     reload_thread.start()
     webview.start(debug=True)
@@ -159,6 +162,7 @@ def main():
 # @server.get("/answer")
 # async def get_answer():
 #   return api.get_answer()
+
 
 if __name__ == "__main__":
     is_dev = sys.argv[-1] == "dev"
