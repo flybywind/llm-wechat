@@ -13,14 +13,10 @@ class ChatInfo(BaseModel):
     id: int
     content: str = ""
     name: RoleName = RoleName.AI
-
+    timestamp: int = 0
     @computed_field
     def type(self) -> str:
         return self.name.value
-
-    @computed_field
-    def timestamp(self) -> int:
-        return int(time.time() * 1000)
 
     def js(self):
         d = self.model_dump()

@@ -16,5 +16,8 @@
     "editor.codeActionsOnSave": {
       "source.organizeImports": "explicit" // 保存时自动整理导入
     }
-  }
+  },
+  "python.testing.pytestArgs": ["-s", "App"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
 }

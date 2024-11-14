@@ -28,6 +28,7 @@ class ChatBackendAPI:
         self.chat_list = []
 
     def add_or_update_question(self, idx: int, qest: str):
+        curr_time = int(time.time() * 1000)
         if idx == -1:
             idx = len(self.chat_list)
         if idx == len(self.chat_list):
@@ -36,14 +37,16 @@ class ChatBackendAPI:
                     id=idx,
                     name=RoleName.You,
                     content=qest,
+                    timestamp=curr_time,
                 )
             )
-            self.chat_list.append(ChatInfo(id=idx + 1))
+            self.chat_list.append(ChatInfo(id=idx + 1, timestamp=curr_time))
         else:
-            self.chat_list[idx + 1] = ChatInfo(id=idx + 1)
+            self.chat_list[idx + 1] = ChatInfo(id=idx + 1, timestamp=curr_time)
 
         logger.debug("add_or_update_question: idx={}, qest={}", idx, qest)
         self.chat_list[idx].content = qest
+        self.chat_list[idx].timestamp = curr_time
         self.quest_queue.put(idx)
         return (self.chat_list[idx].js(), self.chat_list[idx + 1].js())
 

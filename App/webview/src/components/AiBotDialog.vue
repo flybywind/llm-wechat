@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch, reactive } from "vue";
+import { computed, ref, watch, reactive, useTemplateRef } from "vue";
 import Chat from "./Chat.vue";
 import fnv1a from "../utils/hash";
 var chatList = [
@@ -20,22 +20,24 @@ var chatList = [
 ];
 const chatListRef = reactive([]);
 var intervalId = ref(null);
-var textarea = ref(null);
+var textarea = useTemplateRef("textarea");
 var sendBtnClass = computed(() => (intervalId.value !== null ? "stop" : "send"));
 function askQuestion(idx) {
   if (sendBtnClass.value === "stop") {
     pywebview.api.stop_answering();
     return;
   }
-  const q = textarea.value;
-  pywebview.api.add_or_update_question(idx, q.value).then((new_chats) => {
+
+  const q = idx==-1 ? textarea.value.value:chatListRef[idx].content;
+  textarea.value.value = "";
+  pywebview.api.add_or_update_question(idx, q).then((new_chats) => {
     const [newQuestion, newAnswer] = new_chats;
     if (idx == -1) {
       chatListRef.push(newQuestion);
       chatListRef.push(newAnswer);
     } else {
-      chatListRef[idx] = newQuestion;
-      chatListRef[idx + 1] = newAnswer;
+      Object.assign(chatListRef[idx], newQuestion);
+      Object.assign(chatListRef[idx+1], newAnswer);
     }
 
     intervalId.value = setInterval(() => {
@@ -55,34 +57,32 @@ function askQuestion(idx) {
     }, 100);
   });
 }
-const contentHash = computed(() => {
-  chatListRef.map((info) => {
-    // return hash code of the info.content
-    return {
-      id: info.id,
-      type: info.type,
-      hash: fnv1a(info.content),
-    };
-  });
-});
 
-watch(
-  contentHash,
-  (newVal, oldVal) => {
-    const ln = newVal.length;
-    for (let i = 0; i < ln; i++) {
-      if (newVal[i].hash !== oldVal[i].hash) {
-        console.log("content changed at ", i);
-        if (newVal[i].type === "user") {
-          askQuestion(newVal[i].id);
-        }
-      }
-    }
-  },
-  {
-    deep: true,
+const handleInfoUpdate = (newInfo) => {
+  const idx = newInfo.id;
+  chatListRef[idx] = newInfo;
+  console.log("content changed at ", idx);
+  if (newInfo.type === "user") {
+    askQuestion(idx);
   }
-);
+};
+// watch(
+//   contentHash,
+//   (newVal, oldVal) => {
+//     const ln = newVal.length;
+//     for (let i = 0; i < ln; i++) {
+//       if (newVal[i].hash !== oldVal[i].hash) {
+//         console.log("content changed at ", i);
+//         if (newVal[i].type === "user") {
+//           askQuestion(newVal[i].id);
+//         }
+//       }
+//     }
+//   },
+//   {
+//     deep: true,
+//   }
+// );
 </script>
 
 <template>
@@ -93,7 +93,8 @@ watch(
     </div>
     <div class="dialog-window">
       <div class="session">
-        <Chat v-for="chat in chatListRef" :Info="chat"></Chat>
+        <Chat v-for="chat in chatListRef" :Info="chat" :status="sendBtnClass"
+         @updateContent="handleInfoUpdate"></Chat> 
       </div>
       <div class="send-chat">
         <div class="wrapper">

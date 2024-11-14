@@ -13,12 +13,18 @@
         content: "Hello, World!",
       }),
     },
+    status: {
+      type: String,
+      default: "send",
+    },
   });
 
   var info = ref(props.Info);
   const editting = ref(false);
   const questionEditting = useTemplateRef("questionEditting");
   const questionMarkdown = useTemplateRef("questionMarkdown");
+  const emitUpdateContent = defineEmits(["updateContent"])
+
   var timestamp_str = computed(() => {
     const date = new Date(info.value.timestamp);
     return date.toLocaleString();
@@ -43,8 +49,16 @@
       questionEditting.value.style.display = "none";
       questionMarkdown.value.style.display = "block";
       info.value.content = questionEditting.value.value;
+      info.value.timestamp = Date.now();
+      updateContent(info.value.content);
     }
   });
+
+  const updateContent = (newContent) => {
+    emitUpdateContent("updateContent", {
+      ...info.value, content:newContent});
+  }
+  
 </script>
 
 <template>
@@ -58,7 +72,9 @@
         <div class="content" v-html="markdownContent" ref="questionMarkdown"></div>
         <textarea ref="questionEditting" @blur="editting=false"></textarea>
       </div>
-      <div class="edit-button" @click="editting=true">
+      <div class="edit-button" 
+        :class="{hide: props.status !== 'send'}" 
+        @click="editting=true">
         <font-awesome-icon icon="pencil-alt" />
       </div>
     </div>
@@ -116,6 +132,9 @@
           resize: none;
           font-size: 1em;
         }
+      }
+      .edit-button.hide {
+        display: none;
       }
     }
     .header {
