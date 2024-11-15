@@ -22,22 +22,19 @@ def get_init_params(cls: Type) -> Dict[str, Any]:
         }
 
 
-def resolve_param_type(param_type: Type, base_class: Type) -> Dict[str, Any]:
-    if param_type in {int, float, str, bool, list, dict}:
-        return param_type
-    elif inspect.isclass(param_type) and is_subclass_of_base(param_type, base_class):
-        return {param_type.__name__: get_class_init_params(param_type, base_class)}
-    else:
-        return str(param_type)
+def scan_class_module_path(directory: str, base_class: Type) -> str:
 
+    for file in Path(directory).rglob("*.py"):
+        module_name = file.stem
+        spec = importlib.util.spec_from_file_location(module_name, file)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
 
-def get_class_init_params(cls: Type, base_class: Type) -> Dict[str, Any]:
-    params = get_init_params(cls)
-    resolved_params = {
-        name: resolve_param_type(param_type, base_class)
-        for name, param_type in params.items()
-    }
-    return resolved_params
+        for name, obj in inspect.getmembers(module, inspect.isclass):
+            if obj == base_class:
+                return str(module) + "." + str(name)
+
+    return None
 
 
 def scan_subclasses(directory: str, base_class: Type) -> Dict[str, Any]:
@@ -54,3 +51,21 @@ def scan_subclasses(directory: str, base_class: Type) -> Dict[str, Any]:
                 subclasses[name] = get_class_init_params(obj, base_class)
 
     return subclasses
+
+
+def resolve_param_type(param_type: Type, base_class: Type) -> Dict[str, Any]:
+    if param_type in {int, float, str, bool, list, dict}:
+        return param_type
+    elif inspect.isclass(param_type) and is_subclass_of_base(param_type, base_class):
+        return {param_type.__name__: get_class_init_params(param_type, base_class)}
+    else:
+        return str(param_type)
+
+
+def get_class_init_params(cls: Type, base_class: Type) -> Dict[str, Any]:
+    params = get_init_params(cls)
+    resolved_params = {
+        name: resolve_param_type(param_type, base_class)
+        for name, param_type in params.items()
+    }
+    return resolved_params
