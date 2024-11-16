@@ -17,7 +17,7 @@
       "source.organizeImports": "explicit" // 保存时自动整理导入
     }
   },
-  "python.testing.pytestArgs": ["-s", "App"],
+  "python.testing.pytestArgs": ["--rootdir=App/backend", "-s", "App"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true
 }

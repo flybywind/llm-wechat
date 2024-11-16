@@ -29,7 +29,7 @@ class QianfanLLM(LLM):
     # 和temperature类似，建议只设置一个
     top_p: float = Field(0.8, ge=0.0, le=1.0)
     # 是否强制关闭实时搜索功能，
-    disable_search: bool = False
+    enable_search: bool = False
     max_output_tokens: int = 1024
     history_len: int = 10
     max_content_len: int = 20000
@@ -44,13 +44,15 @@ class QianfanLLM(LLM):
         Handle a single round of the chat by using the current prompt and the previous context.
         """
         logger.debug(f"Prompt: {prompt}")
-        resp = self._model.do(model=self.model_spec.name, 
-                                messages=[{"role":QfRole.User.value, "content":prompt}],
-                                stream=True,
-                                penalty_score=self.penalty_score,
-                                top_p=self.top_p, 
-                                disable_search=self.disable_search,
-                                max_output_tokens=self.max_output_tokens)
+        resp = self._model.do(
+            model=self.model_spec.name,
+            messages=[{"role": QfRole.User.value, "content": prompt}],
+            stream=True,
+            penalty_score=self.penalty_score,
+            top_p=self.top_p,
+            disable_search=(not self.enable_search),
+            max_output_tokens=self.max_output_tokens,
+        )
         for r in resp:
             body = r["body"]
             g = GenerationChunk(text=body["result"])

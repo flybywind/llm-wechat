@@ -1,4 +1,4 @@
 from .base import TemplateConf
-from .qa_withcontext_chain import QAWithContextChain
+from .qa_withcontext_chain import BaseChain, QAWithContextChain
 
-__all__ = ["TemplateConf", "QAWithContextChain"]
+__all__ = ["TemplateConf", "QAWithContextChain", "BaseChain"]
