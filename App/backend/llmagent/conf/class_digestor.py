@@ -45,10 +45,14 @@ def find_namedtuple_instances_with_names(file_path, target_namedtuple_name):
 
 
 class Scanner:
+    """
+    从每个packge的__init__.py文件中查找给定基类的子类。
+    所以，如果你的类在一个包中，你需要在包的__init__.py文件中导入这个类。
+    """
     def __init__(self, directory: str):
         self.directory = directory
         self.base_class_dict = defaultdict(set)
-        self.py_iterator = Path(directory).rglob("*.py")
+        self.py_iterator = Path(directory).rglob("__init__.py")
 
     def get_class_module_path(
         self, base_class: Type, class_name: str
@@ -74,9 +78,9 @@ class Scanner:
 
                 for name, obj in inspect.getmembers(module, inspect.isclass):
                     if is_subclass_of_base(obj, base_class):
-                        self.base_class_dict[base_class].add((str(module), name))
-        for module_path, class_name in self.base_class_dict[base_class]:
-            if module_path.endswith("." + class_name):
+                        self.base_class_dict[base_class].add((obj.__module__, name))
+        for module_path, sub_class_name in self.base_class_dict[base_class]:
+            if class_name == sub_class_name:
                 return (module_path, class_name)
         return (None, None)
 
