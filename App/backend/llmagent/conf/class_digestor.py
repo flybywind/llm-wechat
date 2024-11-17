@@ -49,6 +49,7 @@ class Scanner:
     从每个packge的__init__.py文件中查找给定基类的子类。
     所以，如果你的类在一个包中，你需要在包的__init__.py文件中导入这个类。
     """
+    __package_root__ = "llmagent"
     def __init__(self, directory: str):
         self.directory = directory
         self.base_class_dict = defaultdict(set)
@@ -69,8 +70,8 @@ class Scanner:
                 if file.parent.name != ".":
                     parents = []
                     for parent in file.parents:
-                        if parent.name == "llmagent":
-                            parents.append("llmagent")
+                        if parent.name == Scanner.__package_root__:
+                            parents.append(Scanner.__package_root__)
                             break
                         parents.append(parent.name)
                     module.__package__ = ".".join(reversed(parents))
