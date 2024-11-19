@@ -55,12 +55,17 @@ class Scanner:
         self.base_class_dict = defaultdict(set)
         self.py_iterator = Path(directory).rglob("__init__.py")
 
-    def get_class_module_path(
-        self, base_class: Type, class_name: str
-    ) -> Tuple[str, str]:
+    def get_class_type_of_name(self, base_class: Type, class_name: str) -> Type:
+        self.scan_base_class(base_class)
+        for class_type, sub_class_name in self.base_class_dict.get(base_class, []):
+            if class_name == sub_class_name:
+                return class_type
+        return None
+
+    def scan_base_class(self, base_class: Type) -> None:
         if base_class not in self.base_class_dict:
             if base_class in {str, int, float, bool, list, set, tuple, dict}:
-                return (None, base_class.__name__)
+                return (base_class, base_class.__name__)
 
             for file in self.py_iterator:
                 module_name = file.stem
@@ -79,11 +84,12 @@ class Scanner:
 
                 for name, obj in inspect.getmembers(module, inspect.isclass):
                     if is_subclass_of_base(obj, base_class):
-                        self.base_class_dict[base_class].add((obj.__module__, name))
-        for module_path, sub_class_name in self.base_class_dict[base_class]:
-            if class_name == sub_class_name:
-                return (module_path, class_name)
-        return (None, None)
+                        # type vs its name
+                        self.base_class_dict[base_class].add((obj, name))
+
+    def get_class_name_map(self, base_class: Type) -> Dict[str, str]:
+        self.scan_base_class(base_class)
+        return {name: tp for tp, name in self.base_class_dict[base_class]}
 
 
 def is_subclass_of_base(cls: Type, base_class: Type) -> bool:

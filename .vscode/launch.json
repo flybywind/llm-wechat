@@ -11,14 +11,6 @@
       "program": "${file}",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
-    },
-    {
-      "name": "test_app",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "test_robot_app.py",
-      "justMyCode": false,
-      "console": "integratedTerminal"
     }
   ]
 }
