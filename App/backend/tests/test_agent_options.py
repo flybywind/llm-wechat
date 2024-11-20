@@ -5,6 +5,7 @@ from llmagent.llmapi.embedding import QianfanEmbedding, QwenEmbedding
 from llmagent.llmapi.model_spec import *
 from llmagent.privatestore.confluence import ConfluenceConf, ConfluenceStore
 from llmagent.privatestore.web import WebConf, WebStore
+from llmagent.chain.base import TemplateConf
 from llmagent.chain.qa_withcontext_chain import QAWithContextChain
 from llmagent.secret.load import AK_SK
 
@@ -65,7 +66,7 @@ def test_agent_options():
             ),
         ],
     )
-    vectorstore_list = ListParam(
+    docstore_list = ListParam(
         repr_name="向量库",
         selections=[
             ItemParam(
@@ -118,19 +119,31 @@ def test_agent_options():
                 clazz_type=QAWithContextChain,
                 construct_param_dict=dict(
                     llm=llm_list.model_copy(deep=True),
-                    vectorstore=vectorstore_list.model_copy(deep=True),
+                    documentstore=docstore_list.model_copy(deep=True),
+                    conf=ItemParam(
+                        repr_name="上下文配置",
+                        clazz_type=TemplateConf,
+                        construct_param_dict=dict(
+                            context_num=SingleParam(repr_name="相关文章数量", value=3),
+                            history_num=SingleParam(
+                                repr_name="历史会话的数量", value=3
+                            ),
+                        ),
+                    ),
                 ),
             )
         ]
     )
 
     agent0 = agent_opts.get_agent(0)
+    agent_opts.clone_agent(0, "私有资料库QA2")
+    agent_opts.update_agent(0.9, 1, "llm", 1)
     agent1 = agent_opts.get_agent(1)
     assert agent0.llm.model_spec == QwenPlus
     assert isinstance(agent0.llm, QwenLLM)
     assert isinstance(agent1.llm, QianfanLLM)
     assert agent1.llm.model_spec == ERNIE4_8K
-    agent_opts.update_agent(Speed128K, 1, "llm", 1, "model_spec")
+    agent_opts.update_agent(Speed128K, 1, "llm", "model_spec")
     agent1 = agent_opts.get_agent(1)
     assert isinstance(agent0.llm, QwenLLM)
     assert isinstance(agent1.llm, QianfanLLM)

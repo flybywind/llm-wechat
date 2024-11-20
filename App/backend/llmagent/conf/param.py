@@ -31,9 +31,9 @@ class ListParam(BaseParam):
         self.idx = index
         return self
 
-    def get(self):
+    def get(self, construct=True):
         v = self.selections[self.idx]
-        if isinstance(v, BaseParam):
+        if isinstance(v, BaseParam) and construct:
             return v.get()
         return v
 

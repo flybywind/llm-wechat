@@ -6,7 +6,8 @@ from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain.llms.base import LLM
-from langchain.vectorstores import VectorStore
+# from langchain.vectorstores import VectorStore
+from ..privatestore.base import BaseStore
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Any, List
 from loguru import logger
@@ -22,7 +23,8 @@ class BaseChain(BaseModel):
     llm: LLM
     conf: TemplateConf
     retriever: BaseRetriever = None
-    vectorstore: VectorStore = None
+
+    documentstore: BaseStore = None
     _template: ChatPromptTemplate = None
     _history: List[BaseMessage] = []
     _current_human_question = ""
