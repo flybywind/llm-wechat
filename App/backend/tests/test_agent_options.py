@@ -137,13 +137,16 @@ def test_agent_options():
 
     agent0 = agent_opts.get_agent(0)
     agent_opts.clone_agent(0, "私有资料库QA2")
-    agent_opts.update_agent(0.9, 1, "llm", 1)
+    # 把LLM设置为llm_list的第二个
+    agent_opts.update_agent_of_paths(1, 1, "llm")
+    # 把LLM设置为llm_list的第二个
+    agent_opts.update_agent_of_paths(0.9, 1, "llm", "top_p")
     agent1 = agent_opts.get_agent(1)
     assert agent0.llm.model_spec == QwenPlus
     assert isinstance(agent0.llm, QwenLLM)
     assert isinstance(agent1.llm, QianfanLLM)
     assert agent1.llm.model_spec == ERNIE4_8K
-    agent_opts.update_agent(Speed128K, 1, "llm", "model_spec")
+    agent_opts.update_agent_of_paths(2, 1, "llm", "model_spec")
     agent1 = agent_opts.get_agent(1)
     assert isinstance(agent0.llm, QwenLLM)
     assert isinstance(agent1.llm, QianfanLLM)

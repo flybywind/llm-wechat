@@ -20,7 +20,6 @@ class SingleParam(BaseParam):
 
     def select(self, value: Any):
         self.value = value
-        return self
 
 
 class ListParam(BaseParam):
@@ -28,14 +27,19 @@ class ListParam(BaseParam):
     idx: int = 0
 
     def select(self, index: int):
+        assert isinstance(index, int), f"Invalid index {index} for ListParam: {self}"
         self.idx = index
-        return self
 
-    def get(self, construct=True):
+    def get(self):
         v = self.selections[self.idx]
-        if isinstance(v, BaseParam) and construct:
+        if isinstance(v, BaseParam):
             return v.get()
         return v
+
+    def get_param(self):
+        p = self.selections[self.idx]
+        assert isinstance(p, BaseParam), f"Invalid param type {type(p)}"
+        return p
 
 
 class ItemParam(BaseParam):
@@ -45,10 +49,17 @@ class ItemParam(BaseParam):
     def select(self, key: str, value_or_index: Any):
         param = self.construct_param_dict[key]
         if isinstance(param, ListParam):
-            assert isinstance(value_or_index, int)
+            assert isinstance(
+                value_or_index, int
+            ), f"Invalid index {value_or_index} for ListParam: {param}"
+        else:
+            assert isinstance(param, SingleParam), f"Invalid param type {type(param)}"
         param.select(value_or_index)
 
     def get(self):
         return self.clazz_type(
             **{k: v.get() for k, v in self.construct_param_dict.items()}
         )
+
+    def get_param(self, name):
+        return self.construct_param_dict[name]

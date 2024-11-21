@@ -13,20 +13,26 @@ class AgentOptionMap(BaseModel):
         agent2.repr_name = agent_name
         self.agents.append(agent2)
 
-    def update_agent(self, value: Any, index: int, *paths: str | int):
+    def update_agent_of_paths(self, value: Any, index: int, *paths: str | int):
         agent = self.agents[index]
         param = agent.construct_param_dict[paths[0]]
-        for path in paths[1:]:
+        def __find_next_param(param, path):
             if isinstance(param, ItemParam):
-                param = param.select(path, value)
-            else:
-                if isinstance(param, ListParam):
-                    if isinstance(path, int):
-                        param = param.select(path)
-                    else:
-                        param = param.get(construct=False)
-                else:
-                    param = param.select(path)
+                return param.get_param(path)
+            if isinstance(param, ListParam):
+                param = param.get_param()
+                param = __find_next_param(param, path)
+            return param
+
+        for path in paths[1:]:
+            if isinstance(param, SingleParam):
+                raise ValueError(f"Invalid path {path} for {type(param)}")
+            param = __find_next_param(param, path)
+
+        assert isinstance(param, SingleParam) or isinstance(
+            param, ListParam
+        ), f"Invalid param {param} for value: {value}"
+        param.select(value)
 
     def get_agent(self, index: int):
         return self.agents[index].get()
