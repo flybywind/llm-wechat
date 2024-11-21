@@ -8,10 +8,19 @@ describe("Configure", () => {
     const schema = {
       type: "object",
       repr_name: "llm_test",
-      selections: ["llm1", "llm2"],
-      llm: {
-        repr_name: "llm",
-        top_p: 0.9,
+      properties: {
+        selections: {
+          type: "array",
+          items: { enum: ["llm1", "llm2"] },
+          default: "llm1",
+        },
+        llm: {
+          type: "object",
+          repr_name: "llm",
+          properties: {
+            top_p: { type: "number", default: 0.9 },
+          },
+        },
       },
     };
     const wrapper = mount(Configure, {

@@ -2,11 +2,22 @@
 import { ref, h } from 'vue';
 
 const props = defineProps(['schema']);
+const schema = ref(props.schema); 
 const emit = defineEmits(['update:schema']);
 
 const RecursiveForm = {
-  props: ['schema', 'depth'],
+  props: {
+    schema: {
+      type: Object,
+      required: true,
+    },
+    depth: {
+      type: Number,
+      required: true,
+    },
+  },
   render() {
+    console.log(`schema: ${JSON.stringify(this.schema)}`);
     if (this.schema.type === 'object') {
       return h('details', [        
         h('summary', this.schema.repr_name || 'unknown'),
@@ -73,7 +84,6 @@ const RecursiveForm = {
   }
 };
 
-const schema = ref({}); 
 </script>
 
 <template>
