@@ -23,6 +23,8 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.1.4",
     "@vitest/coverage-v8": "^0.34.6",
+    "@vue/test-utils": "^2.4.6",
+    "jsdom": "^25.0.1",
     "nodemon": "^3.1.7",
     "sass": "^1.80.6",
     "terser": "^5.36.0",

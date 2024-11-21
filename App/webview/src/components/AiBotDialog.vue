@@ -1,23 +1,22 @@
 <script setup>
-import { computed, ref, watch, reactive, useTemplateRef } from "vue";
+import { computed, ref, reactive, useTemplateRef } from "vue";
 import Chat from "./Chat.vue";
-import fnv1a from "../utils/hash";
-var chatList = [
-  {
-    id: 0,
-    name: "You",
-    type: "user",
-    timestamp: "2021-02-01 00:00:00",
-    content: "answer My question",
-  },
-  {
-    id: 1,
-    name: "AI",
-    type: "ai",
-    timestamp: "2021-01-04 00:00:00",
-    content: "## Hello Vue 3 + Vite\n\n*code:*\n\n```python\nprint('Hello World')\n```",
-  },
-];
+// var chatList = [
+//   {
+//     id: 0,
+//     name: "You",
+//     type: "user",
+//     timestamp: "2021-02-01 00:00:00",
+//     content: "answer My question",
+//   },
+//   {
+//     id: 1,
+//     name: "AI",
+//     type: "ai",
+//     timestamp: "2021-01-04 00:00:00",
+//     content: "## Hello Vue 3 + Vite\n\n*code:*\n\n```python\nprint('Hello World')\n```",
+//   },
+// ];
 const chatListRef = reactive([]);
 var intervalId = ref(null);
 var textarea = useTemplateRef("textarea");
@@ -66,23 +65,6 @@ const handleInfoUpdate = (newInfo) => {
     askQuestion(idx);
   }
 };
-// watch(
-//   contentHash,
-//   (newVal, oldVal) => {
-//     const ln = newVal.length;
-//     for (let i = 0; i < ln; i++) {
-//       if (newVal[i].hash !== oldVal[i].hash) {
-//         console.log("content changed at ", i);
-//         if (newVal[i].type === "user") {
-//           askQuestion(newVal[i].id);
-//         }
-//       }
-//     }
-//   },
-//   {
-//     deep: true,
-//   }
-// );
 </script>
 
 <template>

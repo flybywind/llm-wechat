@@ -14,6 +14,12 @@ export default defineConfig(({ command, mode }) => {
         "@styles": path.resolve(__dirname, "./src/assets/styles"),
       },
     },
+    test: {
+      environment: "jsdom", // 设置测试环境为 JSDOM
+      globals: true, // 启用全局变量
+      setupFiles: "./setupTest.js",
+      include: ["**/*.test.js"], // 包含测试文件的模式
+    },
     css: {
       preprocessorOptions: {
         scss: {
