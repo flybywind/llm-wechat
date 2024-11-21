@@ -15,7 +15,7 @@ class AgentOptionMap(BaseModel):
 
     def update_agent_of_paths(self, value: Any, index: int, *paths: str | int):
         agent = self.agents[index]
-        param = agent.construct_param_dict[paths[0]]
+        param = agent.construct_params[paths[0]]
         def __find_next_param(param, path):
             if isinstance(param, ItemParam):
                 return param.get_param(path)

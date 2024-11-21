@@ -1,3 +1,4 @@
+import json
 from llmagent.conf.option_map import AgentOptionMap
 from llmagent.conf.param import ItemParam, SingleParam, ListParam
 from llmagent.llmapi.llm import QianfanLLM, QwenLLM
@@ -25,14 +26,14 @@ def test_agent_options():
             ItemParam(
                 repr_name="千帆向量化",
                 clazz_type=QianfanEmbedding,
-                construct_param_dict=dict(
+                construct_params=dict(
                     name=SingleParam(repr_name="name", value="Embedding-V1"),
                 ),
             ),
             ItemParam(
                 repr_name="通义向量化",
                 clazz_type=QwenEmbedding,
-                construct_param_dict=dict(
+                construct_params=dict(
                     name=SingleParam(repr_name="name", value="text-embedding-v3"),
                 ),
             ),
@@ -44,7 +45,7 @@ def test_agent_options():
             ItemParam(
                 repr_name="通义千问",
                 clazz_type=QwenLLM,
-                construct_param_dict=dict(
+                construct_params=dict(
                     top_p=SingleParam(repr_name="top_p", value=0.8),
                     model_spec=ListParam(repr_name="模型规格", selections=[QwenPlus]),
                 ),
@@ -52,7 +53,7 @@ def test_agent_options():
             ItemParam(
                 repr_name="千帆",
                 clazz_type=QianfanLLM,
-                construct_param_dict=dict(
+                construct_params=dict(
                     top_p=SingleParam(repr_name="top_p", value=0.8),
                     model_spec=ListParam(
                         repr_name="模型规格",
@@ -72,7 +73,7 @@ def test_agent_options():
             ItemParam(
                 repr_name="Confluence",
                 clazz_type=ConfluenceStore,
-                construct_param_dict=dict(
+                construct_params=dict(
                     name=SingleParam(repr_name="name", value="confluence"),
                     persist_path=SingleParam(
                         repr_name="persist_path", value="confluence"
@@ -81,7 +82,7 @@ def test_agent_options():
                     extra_config=ItemParam(
                         repr_name="Confluence配置",
                         clazz_type=ConfluenceConf,
-                        construct_param_dict=dict(
+                        construct_params=dict(
                             url=SingleParam(
                                 repr_name="url",
                                 value="https://confluence.com",
@@ -96,14 +97,14 @@ def test_agent_options():
             ItemParam(
                 repr_name="Web",
                 clazz_type=WebStore,
-                construct_param_dict=dict(
+                construct_params=dict(
                     name=SingleParam(repr_name="name", value="web"),
                     persist_path=SingleParam(repr_name="persist_path", value="web"),
                     emb_func=emb_func_list.model_copy(deep=True),
                     extra_config=ItemParam(
                         repr_name="Web配置",
                         clazz_type=WebConf,
-                        construct_param_dict=dict(
+                        construct_params=dict(
                             url=SingleParam(repr_name="url", value="https://web.com"),
                             limit=SingleParam(repr_name="limit", value=10),
                         ),
@@ -117,13 +118,13 @@ def test_agent_options():
             ItemParam(
                 repr_name="私有资料库QA",
                 clazz_type=QAWithContextChain,
-                construct_param_dict=dict(
+                construct_params=dict(
                     llm=llm_list.model_copy(deep=True),
                     documentstore=docstore_list.model_copy(deep=True),
                     conf=ItemParam(
                         repr_name="上下文配置",
                         clazz_type=TemplateConf,
-                        construct_param_dict=dict(
+                        construct_params=dict(
                             context_num=SingleParam(repr_name="相关文章数量", value=3),
                             history_num=SingleParam(
                                 repr_name="历史会话的数量", value=3
@@ -151,3 +152,5 @@ def test_agent_options():
     assert isinstance(agent0.llm, QwenLLM)
     assert isinstance(agent1.llm, QianfanLLM)
     assert agent1.llm.model_spec == Speed128K
+
+    print("json dump:{}".format(agent_opts.model_dump_json()))
