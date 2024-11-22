@@ -4,74 +4,101 @@ import { mount } from "@vue/test-utils";
 import Configure from "../src/components/Configure.vue";
 
 describe("Configure", () => {
-  it("renders object properties", () => {
-    const schema = {
-      type: "object",
-      repr_name: "llm_test",
-      properties: {
-        selections: {
-          type: "array",
-          items: { enum: ["llm1", "llm2"] },
-          default: "llm1",
-        },
-        llm: {
-          type: "object",
-          repr_name: "llm",
-          properties: {
-            top_p: { type: "number", default: 0.9 },
-          },
+  const baseSchema = {
+    type: "object",
+    repr_name: "llm_test",
+    properties: {
+      selections: {
+        type: "array",
+        items: { enum: ["llm1", "llm2"] },
+        default: "llm1",
+      },
+      llm: {
+        type: "object",
+        repr_name: "llm",
+        properties: {
+          top_p: { type: "number", default: 0.9 },
         },
       },
-    };
+    },
+  };
+  it("renders object properties", () => {
     const wrapper = mount(Configure, {
-      props: { schema },
+      props: { schema: baseSchema },
     });
     console.log("html content:", wrapper.html());
-    expect(wrapper.findAll('input[type="text"]')).toHaveLength(1);
+    expect(wrapper.find(".recursive-form")).toBeTruthy();
+    expect(wrapper.findAll("details")).toHaveLength(2);
+    expect(wrapper.findAll("summary")).toHaveLength(2);
+    expect(wrapper.find("select")).toBeTruthy();
+    expect(wrapper.find('input[type="number"]')).toBeTruthy();
+
+    expect(wrapper.findAll('input[type="number"]')).toHaveLength(1);
     expect(wrapper.findAll("details summary")).toHaveLength(2);
     expect(wrapper.findAll("details div details summary")).toHaveLength(1);
   });
 
-  it("emits update:schema event", async () => {
-    const schema = {
+  it("emits update:schema event when input changes", async () => {
+    const wrapper = mount(Configure, {
+      props: { schema: baseSchema },
+    });
+
+    // Find and update the number input
+    const numberInput = wrapper.find('input[type="number"]');
+    await numberInput.setValue("1.0");
+
+    // Verify emission
+    const emittedSchema = wrapper.emitted("update:schema");
+    expect(emittedSchema).toBeTruthy();
+    expect(emittedSchema[0][0].properties.llm.properties.top_p.default).toBe(1.0);
+  });
+
+  it("handles array type selection changes", async () => {
+    const wrapper = mount(Configure, {
+      props: { schema: baseSchema },
+    });
+
+    // Find and update the select
+    const select = wrapper.find("select");
+    await select.setValue("llm2");
+
+    // Verify emission
+    expect(wrapper.emitted("update:schema")).toBeTruthy();
+    const emittedSchema = wrapper.emitted("update:schema")[0][0];
+    expect(emittedSchema.properties.selections.default).toBe("llm2");
+  });
+
+  it("maintains schema structure after updates", async () => {
+    const wrapper = mount(Configure, {
+      props: { schema: baseSchema },
+    });
+
+    // Make multiple changes
+    const numberInput = wrapper.find('input[type="number"]');
+    await numberInput.setValue("1.0");
+
+    const select = wrapper.find("select");
+    await select.setValue("llm2");
+
+    // Verify final schema structure
+    const finalEmission = wrapper.emitted("update:schema").pop()[0];
+    expect(finalEmission).toMatchObject({
       type: "object",
       repr_name: "llm_test",
       properties: {
         selections: {
           type: "array",
           items: { enum: ["llm1", "llm2"] },
-          default: "llm1",
+          default: "llm2",
         },
         llm: {
           type: "object",
           repr_name: "llm",
           properties: {
-            top_p: { type: "number", default: 0.9 },
+            top_p: { type: "number", default: 1.0 },
           },
         },
       },
-    };
-    const wrapper = mount(Configure, {
-      props: { schema },
-    });
-
-    await wrapper.find('input[type="text"]').setValue(1.0);
-    let emitted = wrapper.emitted("update:schema");
-    console.log("emitted:", emitted); // why is this undefined?
-    expect(wrapper.emitted("update:schema")[0][0]).toEqual({
-      type: "object",
-      properties: {
-        name: { type: "number", default: 1.0 },
-      },
-    });
-    await wrapper.find("selection").setValue("llm2");
-    expect(wrapper.emitted("update:schema")[0][0]).toEqual({
-      type: "object",
-      properties: {
-        name: { type: "number", default: 1.0 },
-      },
     });
   });
-
-  // Add more test cases...
 });
