@@ -1,3 +1,9 @@
+<template>
+  <div>
+    <RecursiveForm :schema="schema" :depth="0" @update:schema="value => schema = value" />
+  </div>
+</template>
+
 <script setup>
 import { ref, h } from 'vue';
 
@@ -17,16 +23,18 @@ const RecursiveForm = {
     },
   },
   render() {
-    console.log(`schema: ${JSON.stringify(this.schema)}`);
+    console.log(`got schema: ${JSON.stringify(this.schema)}, depth = ${this.depth}`);
     if (this.schema.type === 'object') {
       return h('details', [        
         h('summary', this.schema.repr_name || 'unknown'),
         h('div', { style: { marginLeft: `${this.depth * 20}px` } }, 
-          Object.entries(this.schema.properties).map(([key, subSchema]) => 
-            h('div', [
+          Object.entries(this.schema.properties).map(([key, subSchema]) => {
+            console.log(`sub schema: key = ${key}, schema = ${JSON.stringify(subSchema)}`)
+            return h('div', [
               h('label', key),
               h(RecursiveForm, { 
-                props: { schema: subSchema, depth: this.depth + 1 },
+                schema: subSchema, 
+                depth: this.depth + 1, 
                 on: {
                   'update:schema': value => {
                     this.schema.properties[key] = value;
@@ -35,7 +43,7 @@ const RecursiveForm = {
                 }
               })
             ])
-          )
+          }) 
         )
       ]);
     } else if (this.schema.type === 'array') {
@@ -51,12 +59,12 @@ const RecursiveForm = {
     } else if (this.schema.type === 'boolean') {
       return h('div', [
         h('input', {
-          type: 'radio',
+          type: 'checkbox',
           value: 'true',
-          checked: this.schema.default === true,
-          onChange: () => {
-            this.schema.default = true;
-            this.$emit('update:schema', this.schema);
+          checked: this.schema.default || false,
+          onChange: event => {
+            this.schema.default = event.target.value;
+            this.$emit('update:schema', this.schema); 
           }
         }),
         'True',
@@ -85,9 +93,3 @@ const RecursiveForm = {
 };
 
 </script>
-
-<template>
-  <div>
-    <RecursiveForm :schema="schema" :depth="0" @update:schema="value => schema = value" />
-  </div>
-</template>
