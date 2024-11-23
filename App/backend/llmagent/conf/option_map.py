@@ -6,7 +6,7 @@ from .param import ItemParam, ListParam, SingleParam
 
 class AgentOptionMap(BaseModel):
     agents: List[ItemParam]
-
+    current: int = 0
     def clone_agent(self, index: int, agent_name: str):
         agent = self.agents[index]
         agent2 = agent.model_copy(deep=True)
@@ -36,3 +36,9 @@ class AgentOptionMap(BaseModel):
 
     def get_agent(self, index: int):
         return self.agents[index].get()
+
+    def get(self):
+        return self.get_agent(self.current)
+
+    def set(self, index: int):
+        self.current = index

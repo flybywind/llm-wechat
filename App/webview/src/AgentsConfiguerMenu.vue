@@ -10,7 +10,7 @@
     <!-- Error state -->
     <div v-else-if="error" class="error-state">
       <p class="error-message">{{ error }}</p>
-      <button @click="loadSchema" class="retry-button">
+      <button @click="loadAgentsConf" class="retry-button">
         Retry
       </button>
     </div>
@@ -19,39 +19,33 @@
     <Configure
       v-else-if="schema"
       :schema="schema"
-      @update:schema="handleSchemaUpdate"
+      @update:schema="handleConfUpdate"
     />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import Configure from './Configure.vue';
+import Configure from './components/AgentsConfigure.vue';
 
 const schema = ref(null);
 const isLoading = ref(false);
 const error = ref(null);
 
 // Function to load schema from backend
-const loadSchema = async () => {
+const loadAgentsConf = async () => {
   isLoading.value = true;
   error.value = null;
   
   try {
-    const response = await fetch('/api/schema'); // Adjust the URL to your API endpoint
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
+    const agentsConfMap = await pywebview.api.get_agents_conf_map();
     
     // Validate the schema structure
-    if (!isValidSchema(data)) {
-      throw new Error('Invalid schema format received from server');
-    }
-    
-    schema.value = data;
+    // if (!isValidSchema(agentsConfMap)) {
+    //   throw new Error('Invalid schema format received from server');
+    // }
+    console.log(`agentsConfMap: ${agentsConfMap}`);
+    schema.value = agentsConfMap;
   } catch (e) {
     console.error('Error loading schema:', e);
     error.value = `Failed to load schema: ${e.message}`;
@@ -70,22 +64,10 @@ const isValidSchema = (schema) => {
 };
 
 // Handle schema updates
-const handleSchemaUpdate = async (newSchema) => {
+const handleConfUpdate = async (newSchema) => {
   try {
     // Optional: Save updated schema back to backend
-    const response = await fetch('/api/schema', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newSchema),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to save schema: ${response.status}`);
-    }
-    
-    // Update local schema
+    await pywebview.api.save_agents_conf_map(newSchema); 
     schema.value = newSchema;
   } catch (e) {
     console.error('Error saving schema:', e);
@@ -95,7 +77,7 @@ const handleSchemaUpdate = async (newSchema) => {
 
 // Load schema when component mounts
 onMounted(() => {
-  loadSchema();
+  loadAgentsConf();
 });
 </script>
 

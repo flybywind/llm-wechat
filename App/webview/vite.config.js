@@ -14,6 +14,14 @@ export default defineConfig(({ command, mode }) => {
         "@styles": path.resolve(__dirname, "./src/assets/styles"),
       },
     },
+    build: {
+      rollupOptions: {
+        input: {
+          index: path.resolve(__dirname, "index.html"),
+          conf: path.resolve(__dirname, "agents_conf.html"),
+        },
+      },
+    },
     test: {
       environment: "jsdom", // 设置测试环境为 JSDOM
       globals: true, // 启用全局变量

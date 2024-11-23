@@ -126,6 +126,7 @@ def main():
     cur_path = os.path.dirname(os.path.abspath(__file__))
     app_root = os.path.abspath(os.path.join(cur_path, ".."))
     html_root = os.path.join(app_root, "webview/dist")
+    os.environ["HTML_ROOT"] = html_root
     html_file = os.path.join(html_root, "index.html")
     logger.info(
         "\napp root path: {}, \n html root path: {}, \nindex.html path: {}",
