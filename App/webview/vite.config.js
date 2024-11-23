@@ -6,20 +6,18 @@ import path from 'path'
 export default defineConfig(({ command, mode }) => {
   const isDev = command === "preview" || mode === "development";
   // console.log(`command: ${command}, mode: ${mode}, isDev: ${isDev}`);
+  const baseRolloutOptions = {
+    input: {
+      index: path.resolve(__dirname, "index.html"),
+      agents_conf: path.resolve(__dirname, "agents_conf.html"),
+    },
+  };
   const baseConfig = {
     plugins: [vue()],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
         "@styles": path.resolve(__dirname, "./src/assets/styles"),
-      },
-    },
-    build: {
-      rollupOptions: {
-        input: {
-          index: path.resolve(__dirname, "index.html"),
-          conf: path.resolve(__dirname, "agents_conf.html"),
-        },
       },
     },
     test: {
@@ -52,6 +50,7 @@ export default defineConfig(({ command, mode }) => {
       minify: false,
       // 开发环境的构建配置
       rollupOptions: {
+        ...baseRolloutOptions,
         output: {
           // 保持文件名不被 hash
           entryFileNames: `assets/[name].js`,
@@ -95,6 +94,7 @@ export default defineConfig(({ command, mode }) => {
       },
       // 生产环境构建配置
       rollupOptions: {
+        ...baseRolloutOptions,
         output: {
           // 文件名添加 hash
           entryFileNames: "assets/[name].[hash].js",
@@ -119,5 +119,7 @@ export default defineConfig(({ command, mode }) => {
       brotliSize: false,
     },
   };
-  return isDev ? devConfig : prodConfig;
+  const conf = isDev ? devConfig : prodConfig;
+  console.log(`isDev: ${isDev}, config: ${JSON.stringify(conf)}`);
+  return conf;
 });
