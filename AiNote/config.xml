@@ -6,6 +6,7 @@
         Apache Cordova Team
     </author>
     <content src="index.html" />
+    <hook type="after_prepare" src="hooks/after_prepare/vite_build.js" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
 </widget>

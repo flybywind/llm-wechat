@@ -1,0 +1,20 @@
+{
+  "name": "vite-vue",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "sync:electron": "rsync -av ../www/ ../platforms/electron/www/",
+    "electron": "npm run build && npm run sync:electron && cd .. && electron platforms/electron/www/cdv-electron-main.js",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.1"
+  }
+}
