@@ -7,6 +7,7 @@ import App from "./App.vue";
 
 library.add(faPencilAlt);
 
+// Cordova serve时无法支持，electron也不一定
 document.addEventListener(
   "deviceready",
   function () {
@@ -14,7 +15,7 @@ document.addEventListener(
     // 您的 Cordova 相关代码
     window.resolveLocalFileSystemURL(
       cordova.file.dataDirectory,
-      function (dirEntry) {
+      (dirEntry) => {
         console.log("file system open: " + dirEntry.name);
         // var isAppend = true;
         // createFile(dirEntry, "fileToAppend.txt", isAppend);

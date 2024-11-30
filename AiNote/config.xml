@@ -9,4 +9,7 @@
     <hook type="before_build" src="hooks/before_build/vite_build.js" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
+  <platform name="electron">
+      <preference name="ElectronSettingsFilePath" value="res/electron/settings.json" />
+  </platform>
 </widget>

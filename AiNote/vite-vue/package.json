@@ -12,7 +12,7 @@
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "sync:electron": "rsync -av ../www/ ../platforms/electron/www/",
-    "electron": "npm run build:dev && cd .. && CSC_IDENTITY_AUTO_DISCOVERY=false ELECTRON_BUILDER_PUBLISH=never cordova run electron",
+    "electron": "npm run build:dev && cd .. && CSC_IDENTITY_AUTO_DISCOVERY=false cordova run electron",
     "cdv:serve": "npm run build && npm run sync:electron && cd .. && cordova serve"
   },
   "dependencies": {
