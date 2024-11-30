@@ -1,0 +1,6 @@
+{
+  "watch": ["src/", "public/", "index.html", "agents_conf.html"],
+  "ignore": ["dist/", "node_modules/", ".git/"],
+  "ext": "js,jsx,ts,tsx,vue,css,scss,html",
+  "exec": "npm run preview"
+}
