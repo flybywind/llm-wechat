@@ -6,12 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:dev": "vite build --mode development",
     "preview": "vite build --mode development && vite",
     "watch": "nodemon --config nodemon.json",
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "sync:electron": "rsync -av ../www/ ../platforms/electron/www/",
-    "electron": "npm run build && npm run sync:electron && cd .. && electron platforms/electron/www/cdv-electron-main.js"
+    "electron": "npm run build:dev && cd .. && CSC_IDENTITY_AUTO_DISCOVERY=false ELECTRON_BUILDER_PUBLISH=never cordova run electron",
+    "cdv:serve": "npm run build && npm run sync:electron && cd .. && cordova serve"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
@@ -23,6 +25,8 @@
     "vue-router": "^4.4.5"
   },
   "devDependencies": {
+    "@types/cordova": "^11.0.3",
+    "@types/cordova-plugin-file": "^4.3.5",
     "@vitejs/plugin-vue": "^5.1.4",
     "@vitest/coverage-v8": "^0.34.6",
     "@vue/test-utils": "^2.4.6",

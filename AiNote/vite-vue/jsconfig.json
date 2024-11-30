@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    "checkJs": true
+  },
+  "include": ["src/**/*.js", "www/**/*.js", "node_modules/@types/**/*.d.ts"]
+}
