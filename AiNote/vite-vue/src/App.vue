@@ -1,18 +1,15 @@
 <script setup>
-import AiBotDialog from './components/AiBotDialog.vue'
 </script>
 
 <template>
 <div class="window flex-vert">
   <div class="header">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+    <nav>
+      <router-link to="/">Home</router-link> |
+      <router-link to="/Settings">Settings</router-link> |
+    </nav>
   </div>
-  <AiBotDialog class="dialog"/>
+  <router-view></router-view>
 </div>
 </template>
 

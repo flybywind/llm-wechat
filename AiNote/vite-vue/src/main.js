@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { createApp } from "vue";
 import "./assets/styles/main.scss";
 import App from "./App.vue";
+import router from './router'; // 引入路由配置
 
 library.add(faPencilAlt);
 
@@ -28,4 +29,5 @@ document.addEventListener(
 
 const app = createApp(App);
 app.component("font-awesome-icon", FontAwesomeIcon);
+app.use(router); // 使用路由配置
 app.mount("#app");

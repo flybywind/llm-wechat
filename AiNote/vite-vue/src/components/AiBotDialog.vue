@@ -68,20 +68,22 @@ const handleInfoUpdate = (newInfo) => {
 </script>
 
 <template>
-  <div class="flex-root">
-    <div class="side-bar">
-      <h3>收藏历史</h3>
-      <div class="history"></div>
-    </div>
-    <div class="dialog-window">
-      <div class="session">
-        <Chat v-for="chat in chatListRef" :Info="chat" :status="sendBtnClass"
-         @updateContent="handleInfoUpdate"></Chat> 
+  <div class="dialog">
+    <div class="flex-root">
+      <div class="side-bar">
+        <h3>收藏历史</h3>
+        <div class="history"></div>
       </div>
-      <div class="send-chat">
-        <div class="wrapper">
-          <textarea ref="textarea"></textarea>
-          <button :class="sendBtnClass" @click="askQuestion(-1)"></button>
+      <div class="dialog-window">
+        <div class="session">
+          <Chat v-for="chat in chatListRef" :Info="chat" :status="sendBtnClass" @updateContent="handleInfoUpdate">
+          </Chat>
+        </div>
+        <div class="send-chat">
+          <div class="wrapper">
+            <textarea ref="textarea"></textarea>
+            <button :class="sendBtnClass" @click="askQuestion(-1)"></button>
+          </div>
         </div>
       </div>
     </div>
@@ -117,63 +119,71 @@ const handleInfoUpdate = (newInfo) => {
   }
 }
 
-.dialog-window {
-  display: flex;
-  flex: 5;
-  flex-direction: column;
-  align-items: stretch;
-  padding-left: 3px;
-  border-left: $secondary-color 2px solid;
-  .session {
-    flex: 10;
+.flex-root {
+  width: 100%;
+
+  .dialog-window {
     display: flex;
+    flex: 5;
     flex-direction: column;
     align-items: stretch;
-    margin-left: 10px;
-    padding: 2rem;
-  }
+    padding-left: 3px;
+    border-left: $secondary-color 2px solid;
 
-  .send-chat {
-    min-height: 4em;
-    position: relative;
-    .wrapper {
-      position: absolute;
-      bottom: 3px;
-      right: 10px;
-      padding: 1rem;
+    .session {
+      flex: 10;
       display: flex;
-      width: 100%;
-      textarea {
-        flex: 5;
-        border: none;
-        border-radius: 4px;
-        padding: 0.5rem;
-        margin-right: 1rem;
-      }
+      flex-direction: column;
+      align-items: stretch;
+      margin-left: 10px;
+      padding: 2rem;
+    }
 
-      button {
-        border-radius: 2px;
-        width: 5em;
-        &:hover {
-          box-shadow: 3px 3px 3px $inactive-color;
+    .send-chat {
+      min-height: 4em;
+      position: relative;
+
+      .wrapper {
+        position: absolute;
+        bottom: 3px;
+        right: 10px;
+        padding: 1rem;
+        display: flex;
+        width: 100%;
+
+        textarea {
+          flex: 5;
+          border: none;
+          border-radius: 4px;
+          padding: 0.5rem;
+          margin-right: 1rem;
         }
 
-        &.stop::after {
-          content: "停止";
-        }
+        button {
+          border-radius: 2px;
+          width: 5em;
 
-        &.stop {
-          background-color: $inactive-color;
-          color: $secondary-color;
-        }
+          &:hover {
+            box-shadow: 3px 3px 3px $inactive-color;
+          }
 
-        &.send::after {
-          content: "发送";
-        }
+          &.stop::after {
+            content: "停止";
+          }
 
-        &.send {
-          background-color: #c3deff;
-          color: $text-color;
+          &.stop {
+            background-color: $inactive-color;
+            color: $secondary-color;
+          }
+
+          &.send::after {
+            content: "发送";
+          }
+
+          &.send {
+            background-color: #c3deff;
+            color: $text-color;
+          }
         }
       }
     }
