@@ -24,6 +24,7 @@
   padding: 1em;
   width: 100%;
   border-bottom: $secondary-color 2px solid;
+  max-height: 3em;
 }
 
 .dialog {

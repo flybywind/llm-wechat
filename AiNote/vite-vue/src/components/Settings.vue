@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
+const emitSetting = defineEmits(['newSetting'])
 
 const accessKeys = ref({
   qianfan: {
@@ -11,8 +12,15 @@ const accessKeys = ref({
   }
 })
 
+onMounted(() => {
+  const keys = localStorage.getItem('accessKeys')
+  if (keys) {
+    Object.assign(accessKeys.value, JSON.parse(keys))
+  }
+})
 watch(accessKeys, (newVal) => {
-  console.log(JSON.stringify(newVal))
+  emitSetting('newSetting', newVal)
+  localStorage.setItem('accessKeys', JSON.stringify(newVal))
 },
 {
   deep: true
@@ -48,6 +56,10 @@ watch(accessKeys, (newVal) => {
 </template>
 
 <style lang="scss" scoped>
+.setting {
+  display: flex;
+  flex: 5;
+  margin: 0.5em;
   .api-keys {
     .item {
       border-bottom: $text-color 1px solid;
@@ -60,4 +72,5 @@ watch(accessKeys, (newVal) => {
       }
     }
   }
+}
 </style>

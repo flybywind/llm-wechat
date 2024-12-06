@@ -1,6 +1,11 @@
 <script setup>
+import OpenAI from "openai/index.mjs";
 import { computed, ref, reactive, useTemplateRef } from "vue";
 import Chat from "./Chat.vue";
+
+const openai = new OpenAI({
+  baseURL: "https://api.openai.com/v1",
+});
 // var chatList = [
 //   {
 //     id: 0,
